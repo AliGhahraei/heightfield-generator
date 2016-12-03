@@ -9,30 +9,38 @@
 #include <math.h>
 #include <time.h>
 
-#define CAMSPEED 0.0001f // Camera Speed
+using namespace std;
+
+#define CAMSPEED 0.01f // Camera Speed
+#define CAMSPEED2 0.1f // Camera Speed
 
 //Offset
 int O = 30;
 //Noise
 int Ni = 1;
 //Size of the chart
-int n = 5, last = pow(2,n) + 1;
+int n = 3, last = pow(2,n) + 1;
 float A[33][33] = {0};
 
-// Directions
-enum Direction {up, down, left, right};
-
-float mPosX = 16, mPosY = 1, mPosZ = 3; // Position
-float mViewX = 0, mViewY = 0, mViewZ = 0; // Target to view
+float mPosX = 16, mPosY = 10, mPosZ = 3; // Position
+float mViewX = 0, mViewY = 0.5, mViewZ = 0; // Target to view
 float mUpX = 0, mUpY = 1, mUpZ = 0; // Up position
+
+float  mouse_x = 0, mouse_y = 0; //coordinates from mouse
+float past_x = 0, past_y = 0;
+bool mouse = false; // key for mouse
+bool move_x = false, move_y = false, move_z = false; // simple moves flags
+bool tilt = false, roll = false, pan = false; // transformations of camera
+bool freeMove = false; // free camera movement
+int iWidth, iHeight; // size of the window
 
 void hacerMatriz()
 {
     srand (time(NULL));
-    A[0][0] = -3;
-    A[0][last - 1] = 7;
-    A[last - 1][0] = 1;
-    A[last - 1][last - 1] = -1;
+    A[0][0] = 1;
+    A[0][last - 1] = 20;
+    A[last - 1][0] = 5;
+    A[last - 1][last - 1] = 200;
     double aleatorio;
     //de 1 a longitud de la cuadricula
     for(int i = 1; i <= n; i++)
@@ -42,45 +50,43 @@ void hacerMatriz()
         //recorrido de la matriz ixj
         for (int j = 1; j <= pow(2,(i - 1)); j++)
         {
-             for(int k = 1; k <= pow(2,(i - 1)); k++)
-             {
+            for(int k = 1; k <= pow(2,(i - 1)); k++)
+            {
                 //Interpolate across rows
                 aleatorio = (rand() % 100) / 100.0;
-                A[(j-1)*2*d][(k-1)*2*d+d] = 1/2*(A[(j-1)*2*d][(k-1)*2*d]+A[(j-1)*2*d][k*2*d])+O*(2*aleatorio-1)*pow(2,(-Ni*n));
+                A[(j-1)*2*d][(k-1)*2*d+d] = 1/2*(A[(j-1)*2*d][(k-1)*2*d]+A[(j-1)*2*d][k*2*d]);//+O*(2*aleatorio-1)*pow(2,(-Ni*n));
                 aleatorio = (rand() % 100) / 100.0;
-                A[j*2*d][(k-1)*2*d+d] = 1/2*(A[j*2*d][(k-1)*2*d]+A[j*2*d][k*2*d]) + O*(2*aleatorio-1)*pow(2,(-Ni*n));
+                A[j*2*d][(k-1)*2*d+d] = 1/2*(A[j*2*d][(k-1)*2*d]+A[j*2*d][k*2*d]);//+ O*(2*aleatorio-1)*pow(2,(-Ni*n));
                 //Interpolate across columns
                 aleatorio = (rand() % 100) / 100.0;
-                A[(j-1)*2*d+d][(k-1)*2*d] = 1/2*(A[(j-1)*2*d][(k-1)*2*d]+A[j*2*d][(k-1)*2*d])+O*(2*aleatorio-1)*pow(2,(-Ni*n));
+                A[(j-1)*2*d+d][(k-1)*2*d] = 1/2*(A[(j-1)*2*d][(k-1)*2*d]+A[j*2*d][(k-1)*2*d]);//+O*(2*aleatorio-1)*pow(2,(-Ni*n));
                 aleatorio = (rand() % 100) / 100.0;
-                A[(j-1)*2*d+d][k*2*d] = 1/2*(A[(j-1)*2*d][k*2*d]+A[j*2*d][k*2*d])+O*(2*aleatorio-1)*pow(2,(-Ni*n));
+                A[(j-1)*2*d+d][k*2*d] = 1/2*(A[(j-1)*2*d][k*2*d]+A[j*2*d][k*2*d]);//+O*(2*aleatorio-1)*pow(2,(-Ni*n));
                 //Interpolate the center
                 aleatorio = (rand() % 100) / 100.0;
-                A[(j-1)*2*d+d][(k-1)*2*d+d] = 1/4*(A[(j-1)*2*d][(k-1)*2*d+d]+A[j*2*d][(k-1)*2*d+d]+A[(j-1)*2*d+d][(k-1)*2*d]+A[(j-1)*2*d+d][k*2*d])+O*(2*aleatorio-1)*pow(2,(-Ni*n));
+                A[(j-1)*2*d+d][(k-1)*2*d+d] = 1/4*(A[(j-1)*2*d][(k-1)*2*d+d]+A[j*2*d][(k-1)*2*d+d]+A[(j-1)*2*d+d][(k-1)*2*d]+A[(j-1)*2*d+d][k*2*d]);//+O*(2*aleatorio-1)*pow(2,(-Ni*n));
 
-             }
+            }
         }
     }
 
-    /*
     for(int i = 0; i < last; i++)
     {
         for (int j = 0; j < last; j++)
         {
-            std::cout << A[i][j] << " ";
+            cout << A[i][j] << " ";
         }
-        std::cout << std::endl;
+        cout << endl;
     }
-    */
 }
-
 
 /* GLUT callback Handlers */
 
 static void resize(int width, int height)
 {
     const float ar = (float) width / (float) height;
-
+    iWidth = width;
+    iHeight = height;
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -90,26 +96,46 @@ static void resize(int width, int height)
     glLoadIdentity() ;
 }
 
-void MoveCamera(Direction direction){
-    switch(direction) {
-        case up:
-            mPosY += CAMSPEED;
-            break;
-        case down:
-            mPosY -= CAMSPEED;
-            break;
-        case left:
-            mPosX += CAMSPEED;
-            break;
-        case right:
-            mPosX -= CAMSPEED;
-            break;
-        default:
-            std::cout << "Error";
+static void display(void)
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glColor3f(0.0, 1.0, 0.0);
+
+    gluLookAt(mPosX, mPosY, mPosZ,
+              mViewX, mViewY, mViewZ,
+              mUpX, mUpY, mUpZ);
+
+    glPushMatrix();
+    for(int i = 0; i < last; i++)
+    {
+        glBegin(GL_QUAD_STRIP);
+        for(int j = 0; j < last; j++)
+        {
+
+            glVertex3f(j, A[i+1][j], i+1);
+            glVertex3f(j, A[i][j], i);
+            glVertex3f(j + 1, A[i+1][j+1], i+1);
+            glVertex3f(j + 1, A[i][j+1], i);
+
+        }
+        glEnd();
     }
+    glPopMatrix();
+    glutSwapBuffers();
+
 }
 
-void idle() {
+void MoveCamera(float speed)
+{
+    float mAuxX = mViewX - mPosX;
+    float mAuxY = mViewY - mPosY;
+    float mAuxZ = mViewZ - mPosZ;
+
+    mPosX = mPosX + mAuxX * speed;
+    mPosZ = mPosZ + mAuxZ * speed;
+    mViewX = mViewX + mAuxX * speed;
+    mViewZ = mViewZ + mAuxZ * speed;
 }
 
 void RotateView(float speed)
@@ -119,19 +145,19 @@ void RotateView(float speed)
     float vAuxZ = mViewZ - mPosZ;
 
     mViewZ = (float)(mPosZ + sin(speed)*vAuxX + cos(speed)*vAuxZ);
-	mViewX = (float)(mPosX + cos(speed)*vAuxX - sin(speed)*vAuxZ);
+    mViewX = (float)(mPosX + cos(speed)*vAuxX - sin(speed)*vAuxZ);
 }
 
 void BoomCamera(float speed)
 {
     mPosY = mPosY + speed;
-    //mViewY = mViewY + speed;
+    mViewY = mViewY + speed;
 }
 
 void DollyCamera(float speed)
 {
     mPosX = mPosX + speed;
-    //mViewX = mViewX + speed;
+    mViewX = mViewX + speed;
 }
 
 void RollCamera(float speed)
@@ -141,10 +167,10 @@ void RollCamera(float speed)
     float vAuxZ = mViewZ - mPosZ;
 
     //mViewZ = (float)(mPosZ + sin(speed)*vAuxX + cos(speed)*vAuxZ);
-	//mViewX = (float)(mPosX + cos(speed)*vAuxX - sin(speed)*vAuxZ);
+    //mViewX = (float)(mPosX + cos(speed)*vAuxX - sin(speed)*vAuxZ);
 
     mViewX = (float)(mPosX + sin(speed)*vAuxY + cos(speed)*vAuxX);
-	mViewY = (float)(mPosY + cos(speed)*vAuxY - sin(speed)*vAuxX);
+    mViewY = (float)(mPosY + cos(speed)*vAuxY - sin(speed)*vAuxX);
 }
 
 void TiltCamera(float speed)
@@ -153,21 +179,71 @@ void TiltCamera(float speed)
     mUpY = mUpY + (float) sin(speed);
 }
 
+void mouse_Movement(int x, int y)
+{
+    int iSign = 1, iSignX = 1;
+    past_x = mouse_x;
+    past_y = mouse_y;
+    mouse_x = x;
+    mouse_y = y;
+    iSign = (past_y > mouse_y)? 1 : -1 ;
+    iSignX = (past_x > mouse_x)? 1 : -1 ;
+    //cout << mouse_x << " " << mouse_y << endl;
+    if(mouse)
+    {
+        if(move_x)
+        {
+            DollyCamera((float) 0.0001 * (mouse_x - (iWidth / 2.0)));
+        }
+        if(move_y)
+        {
+            BoomCamera((float) 0.0001 * (mouse_y - (iHeight / 2.0)));
+        }
+        if(move_z)
+        {
+            MoveCamera((float) 0.0001 * iSign * (mouse_x - (iWidth / 2.0)));
+        }
+        if(tilt)
+        {
+            TiltCamera((float) 0.0005 * iSign * (mouse_x - (iWidth / 2.0)));
+        }
+        if(roll)
+        {
+            RollCamera((float) 0.0001 * iSign * (mouse_x - (iWidth / 2.0)));
+        }
+        if(pan)
+        {
+            RotateView((float) 0.00001 * (mouse_x - (iWidth / 2.0)) );
+        }
+        if(freeMove)
+        {
+            mViewX = (float) 0.01 * (mouse_x - (iWidth / 2.0));
+            mViewY = (float) 0.01 * (mouse_y - (iHeight / 2.0));
+            mViewZ = 0.5;
+        }
+
+    }
+}
+
 void Keyboard_Input(int key, int x, int y)
 {
     switch(key)
     {
         case GLUT_KEY_UP:
-            MoveCamera(up);
+            //cout << "Arriba" << endl;
+            MoveCamera(CAMSPEED);
             break;
         case GLUT_KEY_DOWN:
-            MoveCamera(down);
+            //cout << "Abajo" << endl;
+            MoveCamera(-CAMSPEED);
             break;
         case GLUT_KEY_RIGHT:
-            MoveCamera(left);
+            //cout << "Derecha" << endl;
+            RotateView(CAMSPEED);
             break;
         case GLUT_KEY_LEFT:
-            MoveCamera(right);
+            //cout << "Abajo" << endl;
+            RotateView(-CAMSPEED);
             break;
     }
     glutPostRedisplay();
@@ -177,70 +253,89 @@ static void key(unsigned char key, int x, int y)
 {
     switch (key)
     {
+        case 27 :
         case 'q':
             exit(0);
             break;
-        case 'w':
-            BoomCamera(CAMSPEED);
+
+        case 'x':
+            move_x = (move_x)? false : true;
+            freeMove = false;
+            cout << "move in x: " << move_x << endl;
             break;
-        case 's':
-            BoomCamera(-CAMSPEED);
+        case 'y':
+            move_y = (move_y)? false : true;
+            move_z = false;
+            freeMove = false;
+            cout << "move in y: " << move_y << endl;
             break;
-        case 'a':
-            DollyCamera(-CAMSPEED);
-            break;
-        case 'd':
-            DollyCamera(CAMSPEED);
-            break;
-        case 'r':
-            RollCamera(-CAMSPEED);
+        case 'z':
+            move_z = (move_z)? false : true;
+            move_y = false;
+            freeMove = false;
+            cout << "move in z: " << move_z << endl;
             break;
         case 't':
-            RollCamera(CAMSPEED);
+            tilt = (tilt)? false : true;
+            move_z = move_y = false;
+            pan = roll = false;
+            freeMove = false;
+            cout << "move in tilt: " << tilt << endl;
+            break;
+        case 'p':
+            pan = (pan)? false : true;
+            move_x = false;
+            tilt = roll = false;
+            freeMove = false;
+            cout << "move in pan: " << pan << endl;
+            break;
+        case 'r':
+            roll = (roll)? false : true;
+            move_z = move_y = false;
+            pan = tilt = false;
+            freeMove = false;
+            cout << "move in roll: " << roll << endl;
             break;
         case 'f':
-            TiltCamera(-CAMSPEED);
+            freeMove = (freeMove)? false : true;
+            move_x = move_y = move_z = false;
+            roll = pan = tilt = false;
+            cout << "Free Move: " << freeMove << endl;
             break;
-        case 'g':
-            TiltCamera(CAMSPEED);
+        case 'm':
+            mouse = (mouse)? false : true;
+            cout << "move mouse: " << mouse << endl;
             break;
+        case 'w':
+            BoomCamera(CAMSPEED2);
+            break;
+        case 's':
+            BoomCamera(-CAMSPEED2);
+            break;
+        case 'a':
+            DollyCamera(-CAMSPEED2);
+            break;
+        case 'd':
+            DollyCamera(CAMSPEED2);
+            break;
+
     }
 
     glutPostRedisplay();
 }
 
-static void display(void)
+static void idle(void)
 {
+    // Clear Color and Depth Buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //glColor3d(1,0,0);
-
-    //glLoadIdentity();
-
+    // Reset transformations
+    glLoadIdentity();
+    // Set the camera
     gluLookAt(mPosX, mPosY, mPosZ,
-			  mViewX, mViewY, mViewZ,
-			  mUpX, mUpY, mUpZ);
+              mViewX, mViewY, mViewZ,
+              mUpX, mUpY, mUpZ);
 
-
-    glPushMatrix();
-        glColor3f(0.0, 1.0, 0.0);
-        //int i = 0, j = 0;
-        for(int i = 0; i < last; i++)
-        {
-            for(int j = 0; j < last; j++)
-            {
-
-                glBegin(GL_QUAD_STRIP);
-                glVertex3f(j, A[i+1][j], i+1);
-                glVertex3f(j, A[i][j], i);
-                glVertex3f(j+1, A[i+1][j+1], i+1);
-                glVertex3f(j+1, A[i][j+1], i);
-                glEnd();
-            }
-        }
-
-    glPopMatrix();
-
-    glutSwapBuffers();
+    glutPostRedisplay();
 }
 
 
@@ -266,12 +361,12 @@ int main(int argc, char *argv[])
 
     glutCreateWindow("Terrain");
 
-    //glutReshapeFunc(resize);
+    glutReshapeFunc(resize);
     glutDisplayFunc(display);
     glutKeyboardFunc(key);
     glutSpecialFunc(Keyboard_Input);
-
     glutIdleFunc(idle);
+    glutPassiveMotionFunc( mouse_Movement );
 
     glClearColor(1,1,1,1);
     glEnable(GL_CULL_FACE);
@@ -296,4 +391,6 @@ int main(int argc, char *argv[])
     glMaterialfv(GL_FRONT, GL_SHININESS, high_shininess);
 
     glutMainLoop();
+
+    return EXIT_SUCCESS;
 }
