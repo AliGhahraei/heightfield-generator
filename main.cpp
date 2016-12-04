@@ -15,8 +15,8 @@ using namespace std;
 #define CAMSPEED2 1.0f // Camera Speed
 #define SCREENWIDTH 800
 #define SCREENHEIGHT 600
-#define BUTTONWIDTH 100
-#define BUTTONHEIGHT 100
+#define BUTTONWIDTH 50
+#define BUTTONHEIGHT 50
 #define BUTTONNUMBER 4
 
 //Offset
@@ -29,10 +29,10 @@ const int n = 5, MATRIX_LENGTH = pow(2,n) + 1;
 
 //Buttons
 float BUTTONS [BUTTONNUMBER][4] = {
-        {0, 0},
-        {105, 0},
-        {210, 0},
-        {315, 0},
+        {0, SCREENHEIGHT - 2 * BUTTONHEIGHT},
+        {2 * BUTTONWIDTH, SCREENHEIGHT - 2 * BUTTONHEIGHT},
+        {BUTTONWIDTH, SCREENHEIGHT - BUTTONHEIGHT},
+        {BUTTONWIDTH, SCREENHEIGHT - 3 * BUTTONHEIGHT},
 };
 
 float A[MATRIX_LENGTH][MATRIX_LENGTH] = {0};
