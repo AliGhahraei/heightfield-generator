@@ -30,7 +30,7 @@ const int n = 5, MATRIX_LENGTH = pow(2,n) + 1;
 //Buttons
 const float BUTTONS [BUTTONNUMBER][2] = {
         {0, 0},
-        {BUTTONWIDTH + 1}
+        {BUTTONWIDTH + 1, 0}
 };
 
 float A[MATRIX_LENGTH][MATRIX_LENGTH] = {0};
