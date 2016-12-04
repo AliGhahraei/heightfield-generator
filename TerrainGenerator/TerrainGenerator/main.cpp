@@ -122,62 +122,38 @@ static void resize(int width, int height)
 static void display(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
+    glEnable(GL_DEPTH_TEST);
     
     gluLookAt(mPosX, mPosY, mPosZ,
               mViewX, mViewY, mViewZ,
               mUpX, mUpY, mUpZ);
-    
+    float colorflt = 1.0;
     glPushMatrix();
-    glBegin(GL_TRIANGLES);
-    for(int i = 0; i < (MATRIX_LENGTH-1); i++){
-        for(int j = 0; j < (MATRIX_LENGTH-1); j++){
-            glColor3f(0.0, 1.0, 0.0);
-            //Normal Triangles
-            glNormal3f(j, A[i][j], i);
-            glVertex3f(j, A[i][j], i);
-            
-            glNormal3f(j+1, A[i][j+1], i);
-            glVertex3f(j+1, A[i][j+1], i);
-            
-            glNormal3f(j, A[i+1][j], i+1);
-            glVertex3f(j, A[i+1][j], i+1);
-            
-            //Reverse triangles
-            glNormal3f(j+1, A[i+1][j+1], i+1);
-            glVertex3f(j+1, A[i+1][j+1], i+1);
-            
-            glNormal3f(j+1, A[i][j+1], i);
-            glVertex3f(j+1, A[i][j+1], i);
-            
-            glNormal3f(j, A[i+1][j], i+1);
-            glVertex3f(j, A[i+1][j], i+1);
-            
-            glColor3f(1.0, 0.0, 0.0);
-            //Inverse triangles
-            glNormal3f(j, A[i+1][j], -(i+1));
-            glVertex3f(j, A[i+1][j], -(i+1));
-            
-            glNormal3f(j, A[i][j], -i);
-            glVertex3f(j, A[i][j], -i);
-            
-            glNormal3f((j+1), A[i][j+1], -i);
-            glVertex3f((j+1), A[i][j+1], -i);
-            
-            //Reverse Inverse triangles
-            glNormal3f((j+1), A[i+1][j+1], -(i+1));
-            glVertex3f((j+1), A[i+1][j+1], -(i+1));
-            
-            glNormal3f((j+1), A[i][j+1], -i);
-            glVertex3f((j+1), A[i][j+1], -i);
-            
-            glNormal3f(j, A[i+1][j], -(i+1));
-            glVertex3f(j, A[i+1][j], -(i+1));
-            
+    
+    for(int iX = 0; iX < (MATRIX_LENGTH-1); iX+=2){
+        glBegin(GL_QUAD_STRIP);
+        for(int jY = 0; jY < (MATRIX_LENGTH-1); jY++){
+            glColor3f(0.5, 0.0, 1.0);
+            //glNormal3f(iX+1, A[iX+1][jY], jY);
+            glVertex3f(iX+1, A[iX+1][jY], jY);
+            glColor3f(1.0, 1.0, 0.0);
+            //glNormal3f(iX, A[iX][jY], jY);
+            glVertex3f(iX, A[iX][jY], jY);
+ 
+        }
+        glEnd();
+        glBegin(GL_QUAD_STRIP);
+        for(int jY = 0; jY < (MATRIX_LENGTH-1); jY++){
+            glColor3f(1.0, 1.0, 0.0);
+            //glNormal3f(iX+2, A[iX][jY], jY);
+            glVertex3f(iX+2, A[iX][jY], jY);
+            glColor3f(0.5, 0.0, 1.0);
+            //glNormal3f(iX+1, A[iX+1][jY], jY);
+            glVertex3f(iX+1, A[iX+1][jY], jY);
             
         }
+        glEnd();
     }
-    glEnd();
 
     /*glBegin(GL_QUAD_STRIP);
     for(int i = 0; i < MATRIX_LENGTH; i++)
@@ -201,7 +177,7 @@ static void display(void)
     glEnd();*/
     glPopMatrix();
     glutSwapBuffers();
-    //glutPostRedisplay();
+    glutPostRedisplay();
     
 }
 
@@ -418,7 +394,7 @@ static void idle(void)
 }
 
 
-const GLfloat light_ambient[]  = { 0.0f, 0.0f, 0.0f, 1.0f };
+const GLfloat light_ambient[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
 const GLfloat light_diffuse[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
 const GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 const GLfloat light_position[] = { 2.0f, 5.0f, 5.0f, 0.0f };
@@ -463,7 +439,7 @@ int main(int argc, char *argv[])
     glutIdleFunc(idle);
     glutPassiveMotionFunc( mouse_Movement );
     
-    glClearColor(0,0,1,1);
+    glClearColor(1,1,1,1);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     
