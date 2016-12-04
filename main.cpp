@@ -18,9 +18,11 @@ using namespace std;
 int O = 30;
 //Noise
 int Ni = 1;
+
 //Size of the chart
-int n = 3, last = pow(2,n) + 1;
-float A[33][33] = {0};
+const int n = 3, MATRIX_LENGTH = pow(2,n) + 1;
+
+float A[MATRIX_LENGTH][MATRIX_LENGTH] = {0};
 
 float mPosX = 16, mPosY = 10, mPosZ = 3; // Position
 float mViewX = 0, mViewY = 0.5, mViewZ = 0; // Target to view
@@ -34,51 +36,60 @@ bool tilt = false, roll = false, pan = false; // transformations of camera
 bool freeMove = false; // free camera movement
 int iWidth, iHeight; // size of the window
 
-void hacerMatriz()
+void makeMatrix(float leftTop, float rightTop, float leftBottom, float rightBottom)
 {
-    srand (time(NULL));
-    A[0][0] = 1;
-    A[0][last - 1] = 20;
-    A[last - 1][0] = 5;
-    A[last - 1][last - 1] = 200;
-    double aleatorio;
-    //de 1 a longitud de la cuadricula
-    for(int i = 1; i <= n; i++)
-    {
-        int N = last - 1;
-        int d = floor( N / pow(2,i));
-        //recorrido de la matriz ixj
-        for (int j = 1; j <= pow(2,(i - 1)); j++)
-        {
-            for(int k = 1; k <= pow(2,(i - 1)); k++)
-            {
-                //Interpolate across rows
-                aleatorio = (rand() % 100) / 100.0;
-                A[(j-1)*2*d][(k-1)*2*d+d] = 1/2*(A[(j-1)*2*d][(k-1)*2*d]+A[(j-1)*2*d][k*2*d]);//+O*(2*aleatorio-1)*pow(2,(-Ni*n));
-                aleatorio = (rand() % 100) / 100.0;
-                A[j*2*d][(k-1)*2*d+d] = 1/2*(A[j*2*d][(k-1)*2*d]+A[j*2*d][k*2*d]);//+ O*(2*aleatorio-1)*pow(2,(-Ni*n));
-                //Interpolate across columns
-                aleatorio = (rand() % 100) / 100.0;
-                A[(j-1)*2*d+d][(k-1)*2*d] = 1/2*(A[(j-1)*2*d][(k-1)*2*d]+A[j*2*d][(k-1)*2*d]);//+O*(2*aleatorio-1)*pow(2,(-Ni*n));
-                aleatorio = (rand() % 100) / 100.0;
-                A[(j-1)*2*d+d][k*2*d] = 1/2*(A[(j-1)*2*d][k*2*d]+A[j*2*d][k*2*d]);//+O*(2*aleatorio-1)*pow(2,(-Ni*n));
-                //Interpolate the center
-                aleatorio = (rand() % 100) / 100.0;
-                A[(j-1)*2*d+d][(k-1)*2*d+d] = 1/4*(A[(j-1)*2*d][(k-1)*2*d+d]+A[j*2*d][(k-1)*2*d+d]+A[(j-1)*2*d+d][(k-1)*2*d]+A[(j-1)*2*d+d][k*2*d]);//+O*(2*aleatorio-1)*pow(2,(-Ni*n));
 
+    srand (time(NULL));
+
+    int lastIndex = MATRIX_LENGTH - 1;
+
+    // Corner initialization
+    A[0][0] = leftTop;
+    A[0][lastIndex] = rightTop;
+    A[lastIndex][0] = leftBottom;
+    A[lastIndex][lastIndex] = rightBottom;
+
+    // Random to add to each cell
+    double random;
+
+    // First cell to modify
+    int interpolationStart = (int)floor(MATRIX_LENGTH/2);
+
+    //Increment
+    int increment = lastIndex - 1;
+
+    for(int i = interpolationStart; i >= 1; i -= (int)ceil(i/2.0)){
+        for(int j = i; j < MATRIX_LENGTH - 1; j+=increment){
+
+            for(int k = i; k < MATRIX_LENGTH - 1; k+=increment){
+                A[k + i][j] = (A[k+i][j+i] + A[k+i][j-i])/2;
+                A[k - i][j] = (A[k-i][j+i] + A[k-i][j-i])/2;
+                A[k][j + i] = (A[k+i][j+i] + A[k-i][j+i])/2;
+                A[k][j - i] = (A[k+i][j-i] + A[k-i][j-i])/2;
+
+                A[k][j] = (A[k+i][j] + A[k-i][j] + A[k][j + i] + A[k][j-i])/4;
             }
         }
+
+        interpolationStart /= 2;
+        increment = (int)ceil(increment/2.0);
     }
 
-    for(int i = 0; i < last; i++)
+    //+O*(2*random-1)*pow(2,(-Ni*n));
+}
+
+
+void printMatrix(){
+    for(int i = 0; i < MATRIX_LENGTH; i++)
     {
-        for (int j = 0; j < last; j++)
+        for (int j = 0; j < MATRIX_LENGTH; j++)
         {
             cout << A[i][j] << " ";
         }
         cout << endl;
     }
 }
+
 
 /* GLUT callback Handlers */
 
@@ -107,10 +118,10 @@ static void display(void)
               mUpX, mUpY, mUpZ);
 
     glPushMatrix();
-    for(int i = 0; i < last; i++)
+    for(int i = 0; i < MATRIX_LENGTH; i++)
     {
         glBegin(GL_QUAD_STRIP);
-        for(int j = 0; j < last; j++)
+        for(int j = 0; j < MATRIX_LENGTH; j++)
         {
 
             glVertex3f(j, A[i+1][j], i+1);
@@ -353,10 +364,26 @@ const GLfloat high_shininess[] = { 100.0f };
 
 int main(int argc, char *argv[])
 {
+    int leftTop, rightTop, leftBottom, rightBottom;
+
+/*  cin >> leftTop;
+    cin >> rightTop;
+    cin >> leftBottom;
+    cin >> rightBottom;*/
+
+    leftTop = 1;
+    rightTop = 20;
+    leftBottom = 5;
+    rightBottom = 200;
+
     glutInit(&argc, argv);
     glutInitWindowSize(800,600);
     glutInitWindowPosition(10,10);
-    hacerMatriz();
+
+
+    makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
+    printMatrix();
+
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 
     glutCreateWindow("Terrain");
@@ -391,6 +418,4 @@ int main(int argc, char *argv[])
     glMaterialfv(GL_FRONT, GL_SHININESS, high_shininess);
 
     glutMainLoop();
-
-    return EXIT_SUCCESS;
 }
