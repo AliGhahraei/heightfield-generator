@@ -13,6 +13,8 @@ using namespace std;
 
 #define CAMSPEED 0.01f // Camera Speed
 #define CAMSPEED2 0.1f // Camera Speed
+#define SCREENWIDTH 800
+#define SCREENHEIGHT 600
 
 //Offset
 int O = 30;
@@ -117,9 +119,9 @@ void drawButtons(){
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    glOrtho(0.0, 800, 600, 0.0, -1.0, 10.0);
+    glOrtho(0.0, SCREENWIDTH, SCREENHEIGHT, 0.0, -1.0, 10.0);
     glMatrixMode(GL_MODELVIEW);
-    //glPushMatrix();
+    glPushMatrix();
     glLoadIdentity();
     glDisable(GL_CULL_FACE);
 
@@ -128,9 +130,9 @@ void drawButtons(){
     glBegin(GL_QUADS);
     glColor3f(1.0f, 0.0f, 0.0);
     glVertex2f(0.0, 0.0);
-    glVertex2f(10.0, 0.0);
-    glVertex2f(10.0, 10.0);
-    glVertex2f(0.0, 10.0);
+    glVertex2f(100.0, 0.0);
+    glVertex2f(100.0, 100.0);
+    glVertex2f(0.0, 100.0);
     glEnd();
 
     // Making sure we can render 3d again
@@ -446,7 +448,7 @@ int main(int argc, char *argv[])
     rightBottom = -5;
 
     glutInit(&argc, argv);
-    glutInitWindowSize(800,600);
+    glutInitWindowSize(SCREENWIDTH,SCREENHEIGHT);
     glutInitWindowPosition(10,10);
 
 
