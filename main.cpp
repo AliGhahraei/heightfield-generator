@@ -383,10 +383,10 @@ static void key(unsigned char key, int x, int y)
             BoomCamera(-CAMSPEED2);
             break;
         case 'a':
-            DollyCamera(-CAMSPEED2);
+            DollyCamera(CAMSPEED2);
             break;
         case 'd':
-            DollyCamera(CAMSPEED2);
+            DollyCamera(-CAMSPEED2);
             break;
 
     }
@@ -400,16 +400,25 @@ void mouseEvent(int button, int state, int x, int y){
 
     if(isLeftMouseButton && isReleased){
         bool isLeftMenuButton = (x>=0 && x<=BUTTONWIDTH) && (y>=0 && y<=BUTTONHEIGHT);
-        bool isRightMenuButton = (x>BUTTONWIDTH && x<=(BUTTONWIDTH * 2) + 1)
-                                 && (y>=0 && y<=BUTTONHEIGHT);
+        bool isRightMenuButton = (x>BUTTONWIDTH && x<=(BUTTONWIDTH * 2) + 1);
 
         if(isLeftMenuButton){
             cout << "left" << endl;
+            DollyCamera(CAMSPEED2);
             glutPostRedisplay();
+            /*
+            case 'w':
+            BoomCamera(CAMSPEED2);
+            break;
+            case 's':
+                BoomCamera(-CAMSPEED2);
+            break;
+             */
         }
 
         else if(isRightMenuButton){
             cout << "right" << endl;
+            DollyCamera(-CAMSPEED2);
             glutPostRedisplay();
         }
     }
