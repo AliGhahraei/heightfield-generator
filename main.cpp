@@ -28,8 +28,8 @@ const int n = 5, MATRIX_LENGTH = pow(2,n) + 1;
 
 float A[MATRIX_LENGTH][MATRIX_LENGTH] = {0};
 
-float mPosX = MATRIX_LENGTH/2, mPosY = 50, mPosZ = 5; // Position
-float mViewX = MATRIX_LENGTH/2, mViewY = MATRIX_LENGTH/2, mViewZ = 0; // Target to view
+float mPosX = MATRIX_LENGTH, mPosY = 10, mPosZ = 0; // Position
+float mViewX = 0, mViewY = 0, mViewZ = 0; // Target to view
 float mUpX = 0, mUpY = 1, mUpZ = 0; // Up position
 
 float  mouse_x = 0, mouse_y = 0; //coordinates from mouse
@@ -451,10 +451,10 @@ int main(int argc, char *argv[])
     cin >> leftBottom;
     cin >> rightBottom;*/
 
-    leftTop = -3;
-    rightTop = 7;
-    leftBottom = 1;
-    rightBottom = -5;
+    leftTop = 7;
+    rightTop = 3;
+    leftBottom = 5;
+    rightBottom = 4;
 
     glutInit(&argc, argv);
     glutInitWindowSize(SCREENWIDTH,SCREENHEIGHT);
@@ -462,7 +462,7 @@ int main(int argc, char *argv[])
 
 
     makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
-    //printMatrix();
+    printMatrix();
 
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 
