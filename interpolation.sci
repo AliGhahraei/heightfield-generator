@@ -40,10 +40,14 @@ function [heightField] = interpolation(n, leftTop, rightTop, leftBottom, rightBo
             distanceToEdge = i-1
             for k = i:increment:MATRIX_LENGTH
                 heightField(k+distanceToEdge, j) = mean([heightField(k+distanceToEdge, j+distanceToEdge),heightField(k+distanceToEdge, j-distanceToEdge)])
+
                 heightField(k-distanceToEdge, j) = mean([heightField(k-distanceToEdge, j+distanceToEdge),heightField(k-distanceToEdge, j-distanceToEdge)])
+
                 heightField(k, j+distanceToEdge) = mean([heightField(k+distanceToEdge, j+distanceToEdge),heightField(k-distanceToEdge, j+distanceToEdge)])
+
                 heightField(k, j-distanceToEdge) = mean([heightField(k+distanceToEdge, j-distanceToEdge),heightField(k-distanceToEdge, j-distanceToEdge)])
                 
+
                 heightField(k, j) = mean([heightField(k+distanceToEdge, j), heightField(k-distanceToEdge, j), heightField(k, j+distanceToEdge), heightField(k, j-distanceToEdge)])
             end
         end
