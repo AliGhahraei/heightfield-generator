@@ -17,7 +17,7 @@ using namespace std;
 #define SCREENHEIGHT 600
 #define BUTTONWIDTH 100
 #define BUTTONHEIGHT 100
-#define BUTTONNUMBER 2
+#define BUTTONNUMBER 4
 
 //Offset
 int O = 30;
@@ -28,16 +28,18 @@ int Ni = 1;
 const int n = 5, MATRIX_LENGTH = pow(2,n) + 1;
 
 //Buttons
-const float BUTTONS [BUTTONNUMBER][2] = {
+float BUTTONS [BUTTONNUMBER][4] = {
         {0, 0},
-        {BUTTONWIDTH + 1, 0}
+        {105, 0},
+        {210, 0},
+        {315, 0},
 };
 
 float A[MATRIX_LENGTH][MATRIX_LENGTH] = {0};
 
 float mPosX = MATRIX_LENGTH, mPosY = 10, mPosZ = 0; // Position
 float mViewX = 0, mViewY = 0, mViewZ = 0; // Target to view
-float mUpX = 0, mUpY = 1, mUpZ = 0; // Up position
+float mUpX = 0, mUpY = -1, mUpZ = 0; // Up position
 
 float  mouse_x = 0, mouse_y = 0; //coordinates from mouse
 float past_x = 0, past_y = 0;
@@ -122,11 +124,11 @@ static void resize(int width, int height)
     glLoadIdentity() ;
 }
 
-void drawButton(float startX, float startY, float width = BUTTONWIDTH, float height = BUTTONHEIGHT){
-    glVertex2f(startX, startY);
-    glVertex2f(startX + width, startY);
-    glVertex2f(startX + width, startY + height);
-    glVertex2f(startX, startY + height);
+void drawButton(float* button){
+    glVertex2f(button[0], button[1]);
+    glVertex2f(button[2], button[1]);
+    glVertex2f(button[2], button[3]);
+    glVertex2f(button[0], button[3]);
 }
 
 void drawButtons(){
@@ -145,7 +147,7 @@ void drawButtons(){
 
     glBegin(GL_QUADS);
     for(int i = 0; i < BUTTONNUMBER; i++){
-        drawButton(BUTTONS[i][0], BUTTONS[i][1]);
+        drawButton(BUTTONS[i]);
     }
     glEnd();
 
@@ -402,31 +404,36 @@ static void key(unsigned char key, int x, int y)
     glutPostRedisplay();
 }
 
+bool clicked(float* button, int x, int y){
+    return (x>=button[0] && x<=button[2]) && (y>=button[1] && y<=button[3]);
+}
+
 void mouseEvent(int button, int state, int x, int y){
     bool isLeftMouseButton = button == GLUT_LEFT_BUTTON;
     bool isReleased = state == GLUT_UP;
 
     if(isLeftMouseButton && isReleased){
-        bool isLeftMenuButton = (x>=0 && x<=BUTTONWIDTH) && (y>=0 && y<=BUTTONHEIGHT);
-        bool isRightMenuButton = (x>BUTTONWIDTH && x<=(BUTTONWIDTH * 2) + 1);
-
-        if(isLeftMenuButton){
+        if(clicked(BUTTONS[0], x, y)){
             cout << "left" << endl;
             DollyCamera(CAMSPEED2);
             glutPostRedisplay();
-            /*
-            case 'w':
-            BoomCamera(CAMSPEED2);
-            break;
-            case 's':
-                BoomCamera(-CAMSPEED2);
-            break;
-             */
         }
 
-        else if(isRightMenuButton){
+        else if(clicked(BUTTONS[1], x, y)){
             cout << "right" << endl;
             DollyCamera(-CAMSPEED2);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[2], x, y)){
+            cout << "up" << endl;
+            BoomCamera(CAMSPEED2);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[3], x, y)){
+            cout << "down" << endl;
+            BoomCamera(-CAMSPEED2);
             glutPostRedisplay();
         }
     }
@@ -468,6 +475,17 @@ int main(int argc, char *argv[])
     cin >> leftBottom;
     cin >> rightBottom;*/
 
+    for(int i=0; i<BUTTONNUMBER; i++){
+        BUTTONS[i][2] = BUTTONS[i][0] + BUTTONWIDTH;
+        BUTTONS[i][3] = BUTTONS[i][1] + BUTTONHEIGHT;
+    }
+
+    /*
+    for(int i=0; i<BUTTONNUMBER; i++){
+        cout << "a" << BUTTONS[i][0] << "b" << BUTTONS[i][1] << "c" << BUTTONS[i][2] <<"d" << BUTTONS[i][3] << endl;
+    }
+     */
+
     leftTop = 7;
     rightTop = 3;
     leftBottom = 5;
@@ -479,7 +497,7 @@ int main(int argc, char *argv[])
 
 
     makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
-    printMatrix();
+    //printMatrix();
 
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 
