@@ -11,17 +11,17 @@
 
 using namespace std;
 
-#define CAMSPEED 0.01f // Camera Speed
-#define CAMSPEED2 0.1f // Camera Speed
+#define CAMSPEED 0.1f // Camera Speed
+#define CAMSPEED2 1.0f // Camera Speed
 #define SCREENWIDTH 800
 #define SCREENHEIGHT 600
+#define BUTTONWIDTH 100
+#define BUTTONHEIGHT 100
 
 //Offset
 int O = 30;
 //Noise
 int Ni = 1;
-
-const int buttonSize = 100;
 
 //Size of the chart
 const int n = 5, MATRIX_LENGTH = pow(2,n) + 1;
@@ -115,6 +115,13 @@ static void resize(int width, int height)
     glLoadIdentity() ;
 }
 
+void drawButton(int startX, int startY, int width = BUTTONWIDTH, int height = BUTTONHEIGHT){
+    glVertex2f(startX, startY);
+    glVertex2f(startX + width, startY);
+    glVertex2f(startX + width, startY + height);
+    glVertex2f(startX, startY + height);
+}
+
 void drawButtons(){
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -127,12 +134,11 @@ void drawButtons(){
 
     glClear(GL_DEPTH_BUFFER_BIT);
 
+    glColor3f(0.5, 0.5, 0.5);
+
     glBegin(GL_QUADS);
-    glColor3f(1.0f, 0.0f, 0.0);
-    glVertex2f(0.0, 0.0);
-    glVertex2f(100.0, 0.0);
-    glVertex2f(100.0, 100.0);
-    glVertex2f(0.0, 100.0);
+    drawButton(0, 0);
+    drawButton(BUTTONWIDTH + 1, 0);
     glEnd();
 
     // Making sure we can render 3d again
@@ -153,20 +159,31 @@ static void display(void)
               mUpX, mUpY, mUpZ);
 
     glPushMatrix();
-    glBegin(GL_QUAD_STRIP);
+    glBegin(GL_TRIANGLES);
     for(int i = 0; i < MATRIX_LENGTH; i++)
     {
 
         for(int j = 0; j < MATRIX_LENGTH; j++)
         {
-            glNormal3f(j, A[i+1][j], i+1);
-            glVertex3f(j, A[i+1][j], i+1);
-            glNormal3f(j, A[i][j], i);
-            glVertex3f(j, A[i][j], i);
-            glNormal3f(j + 1, A[i+1][j+1], i+1);
-            glVertex3f(j + 1, A[i+1][j+1], i+1);
-            glNormal3f(j + 1, A[i][j+1], i);
-            glVertex3f(j + 1, A[i][j+1], i);
+            // Fst
+            glNormal3f(j, -A[i][j], i);
+            glVertex3f(j, -A[i][j], i);
+
+            glNormal3f(j, -A[i+1][j], i+1);
+            glVertex3f(j, -A[i+1][j], i+1);
+
+            glNormal3f(j + 1, -A[i][j+1], i);
+            glVertex3f(j + 1, -A[i][j+1], i);
+
+            // Snd
+            glNormal3f(j + 1, -A[i][j+1], i);
+            glVertex3f(j + 1, -A[i][j+1], i);
+
+            glNormal3f(j, -A[i+1][j], i+1);
+            glVertex3f(j, -A[i+1][j], i+1);
+
+            glNormal3f(j + 1, -A[i+1][j+1], i+1);
+            glVertex3f(j + 1, -A[i+1][j+1], i+1);
         }
 
     }
@@ -382,25 +399,17 @@ void mouseEvent(int button, int state, int x, int y){
     bool isReleased = state == GLUT_UP;
 
     if(isLeftMouseButton && isReleased){
-        bool isLeftMenuButton = x>=0 && x<buttonSize;
-        bool isRightMenuButton = x>=buttonSize && x<buttonSize * 2;
+        bool isLeftMenuButton = (x>=0 && x<=BUTTONWIDTH) && (y>=0 && y<=BUTTONHEIGHT);
+        bool isRightMenuButton = (x>BUTTONWIDTH && x<=(BUTTONWIDTH * 2) + 1)
+                                 && (y>=0 && y<=BUTTONHEIGHT);
 
-        // Translate Left
-        if(isLeftMenuButton && y>=0 && y < buttonSize){
+        if(isLeftMenuButton){
+            cout << "left" << endl;
             glutPostRedisplay();
         }
-            // Translate Right
-        else if(isRightMenuButton && y>=0 && y<buttonSize){
-            glutPostRedisplay();
-        }
-            // Rotate Left
-        else if(isLeftMenuButton && y>=buttonSize && y<buttonSize*2){
-            glutPostRedisplay();
-        }
-            // Rotate Right
-        else if(isRightMenuButton && y>=buttonSize && y<buttonSize*2){
-            glRotatef(-360/10, 0.1, 0, 0);
-            std::cout << "RR" << std::endl;
+
+        else if(isRightMenuButton){
+            cout << "right" << endl;
             glutPostRedisplay();
         }
     }
@@ -453,7 +462,7 @@ int main(int argc, char *argv[])
 
 
     makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
-    printMatrix();
+    //printMatrix();
 
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 
