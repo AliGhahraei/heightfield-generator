@@ -19,6 +19,8 @@ int O = 30;
 //Noise
 int Ni = 1;
 
+const int buttonSize = 100;
+
 //Size of the chart
 const int n = 5, MATRIX_LENGTH = pow(2,n) + 1;
 
@@ -111,6 +113,33 @@ static void resize(int width, int height)
     glLoadIdentity() ;
 }
 
+void drawButtons(){
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0.0, 800, 600, 0.0, -1.0, 10.0);
+    glMatrixMode(GL_MODELVIEW);
+    //glPushMatrix();
+    glLoadIdentity();
+    glDisable(GL_CULL_FACE);
+
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    glBegin(GL_QUADS);
+    glColor3f(1.0f, 0.0f, 0.0);
+    glVertex2f(0.0, 0.0);
+    glVertex2f(10.0, 0.0);
+    glVertex2f(10.0, 10.0);
+    glVertex2f(0.0, 10.0);
+    glEnd();
+
+    // Making sure we can render 3d again
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+}
+
 static void display(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -141,6 +170,9 @@ static void display(void)
     }
     glEnd();
     glPopMatrix();
+
+    drawButtons();
+
     glutSwapBuffers();
 
 }
@@ -343,6 +375,35 @@ static void key(unsigned char key, int x, int y)
     glutPostRedisplay();
 }
 
+void mouseEvent(int button, int state, int x, int y){
+    bool isLeftMouseButton = button == GLUT_LEFT_BUTTON;
+    bool isReleased = state == GLUT_UP;
+
+    if(isLeftMouseButton && isReleased){
+        bool isLeftMenuButton = x>=0 && x<buttonSize;
+        bool isRightMenuButton = x>=buttonSize && x<buttonSize * 2;
+
+        // Translate Left
+        if(isLeftMenuButton && y>=0 && y < buttonSize){
+            glutPostRedisplay();
+        }
+            // Translate Right
+        else if(isRightMenuButton && y>=0 && y<buttonSize){
+            glutPostRedisplay();
+        }
+            // Rotate Left
+        else if(isLeftMenuButton && y>=buttonSize && y<buttonSize*2){
+            glutPostRedisplay();
+        }
+            // Rotate Right
+        else if(isRightMenuButton && y>=buttonSize && y<buttonSize*2){
+            glRotatef(-360/10, 0.1, 0, 0);
+            std::cout << "RR" << std::endl;
+            glutPostRedisplay();
+        }
+    }
+}
+
 static void idle(void)
 {
     // Clear Color and Depth Buffers
@@ -402,6 +463,7 @@ int main(int argc, char *argv[])
     glutSpecialFunc(Keyboard_Input);
     glutIdleFunc(idle);
     glutPassiveMotionFunc( mouse_Movement );
+    glutMouseFunc(mouseEvent);
 
     glClearColor(1,1,1,1);
     glEnable(GL_CULL_FACE);
