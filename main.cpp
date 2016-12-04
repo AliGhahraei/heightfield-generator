@@ -17,6 +17,7 @@ using namespace std;
 #define SCREENHEIGHT 600
 #define BUTTONWIDTH 100
 #define BUTTONHEIGHT 100
+#define BUTTONNUMBER 2
 
 //Offset
 int O = 30;
@@ -25,6 +26,12 @@ int Ni = 1;
 
 //Size of the chart
 const int n = 5, MATRIX_LENGTH = pow(2,n) + 1;
+
+//Buttons
+const float BUTTONS [BUTTONNUMBER][2] = {
+        {0, 0},
+        {BUTTONWIDTH + 1}
+};
 
 float A[MATRIX_LENGTH][MATRIX_LENGTH] = {0};
 
@@ -115,7 +122,7 @@ static void resize(int width, int height)
     glLoadIdentity() ;
 }
 
-void drawButton(int startX, int startY, int width = BUTTONWIDTH, int height = BUTTONHEIGHT){
+void drawButton(float startX, float startY, float width = BUTTONWIDTH, float height = BUTTONHEIGHT){
     glVertex2f(startX, startY);
     glVertex2f(startX + width, startY);
     glVertex2f(startX + width, startY + height);
@@ -137,8 +144,9 @@ void drawButtons(){
     glColor3f(0.5, 0.5, 0.5);
 
     glBegin(GL_QUADS);
-    drawButton(0, 0);
-    drawButton(BUTTONWIDTH + 1, 0);
+    for(int i = 0; i < BUTTONNUMBER; i++){
+        drawButton(BUTTONS[i][0], BUTTONS[i][1]);
+    }
     glEnd();
 
     // Making sure we can render 3d again
