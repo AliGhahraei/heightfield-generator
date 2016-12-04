@@ -20,12 +20,12 @@ int O = 30;
 int Ni = 1;
 
 //Size of the chart
-const int n = 3, MATRIX_LENGTH = pow(2,n) + 1;
+const int n = 5, MATRIX_LENGTH = pow(2,n) + 1;
 
 float A[MATRIX_LENGTH][MATRIX_LENGTH] = {0};
 
-float mPosX = 16, mPosY = 10, mPosZ = 3; // Position
-float mViewX = 0, mViewY = 0.5, mViewZ = 0; // Target to view
+float mPosX = MATRIX_LENGTH/2, mPosY = 50, mPosZ = 5; // Position
+float mViewX = MATRIX_LENGTH/2, mViewY = MATRIX_LENGTH/2, mViewZ = 0; // Target to view
 float mUpX = 0, mUpY = 1, mUpZ = 0; // Up position
 
 float  mouse_x = 0, mouse_y = 0; //coordinates from mouse
@@ -62,20 +62,24 @@ void makeMatrix(float leftTop, float rightTop, float leftBottom, float rightBott
         for(int j = i; j < MATRIX_LENGTH - 1; j+=increment){
 
             for(int k = i; k < MATRIX_LENGTH - 1; k+=increment){
-                A[k + i][j] = (A[k+i][j+i] + A[k+i][j-i])/2;
-                A[k - i][j] = (A[k-i][j+i] + A[k-i][j-i])/2;
-                A[k][j + i] = (A[k+i][j+i] + A[k-i][j+i])/2;
-                A[k][j - i] = (A[k+i][j-i] + A[k-i][j-i])/2;
+                random = (rand()%100)/100;
+                A[k + i][j] = (A[k+i][j+i] + A[k+i][j-i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
+                random = (rand()%100)/100;
+                A[k - i][j] = (A[k-i][j+i] + A[k-i][j-i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
+                random = (rand()%100)/100;
+                A[k][j + i] = (A[k+i][j+i] + A[k-i][j+i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
+                random = (rand()%100)/100;
+                A[k][j - i] = (A[k+i][j-i] + A[k-i][j-i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
 
-                A[k][j] = (A[k+i][j] + A[k-i][j] + A[k][j + i] + A[k][j-i])/4;
+                random = (rand()%100)/100;
+                A[k][j] = (A[k+i][j] + A[k-i][j] + A[k][j + i] + A[k][j-i])/4
+                + O*(2*random-1)*pow(2,(-Ni*n));
             }
         }
 
         interpolationStart /= 2;
         increment = (int)ceil(increment/2.0);
     }
-
-    //+O*(2*random-1)*pow(2,(-Ni*n));
 }
 
 
@@ -118,20 +122,24 @@ static void display(void)
               mUpX, mUpY, mUpZ);
 
     glPushMatrix();
+    glBegin(GL_QUAD_STRIP);
     for(int i = 0; i < MATRIX_LENGTH; i++)
     {
-        glBegin(GL_QUAD_STRIP);
+
         for(int j = 0; j < MATRIX_LENGTH; j++)
         {
-
+            glNormal3f(j, A[i+1][j], i+1);
             glVertex3f(j, A[i+1][j], i+1);
+            glNormal3f(j, A[i][j], i);
             glVertex3f(j, A[i][j], i);
+            glNormal3f(j + 1, A[i+1][j+1], i+1);
             glVertex3f(j + 1, A[i+1][j+1], i+1);
+            glNormal3f(j + 1, A[i][j+1], i);
             glVertex3f(j + 1, A[i][j+1], i);
-
         }
-        glEnd();
+
     }
+    glEnd();
     glPopMatrix();
     glutSwapBuffers();
 
@@ -371,10 +379,10 @@ int main(int argc, char *argv[])
     cin >> leftBottom;
     cin >> rightBottom;*/
 
-    leftTop = 1;
-    rightTop = 20;
-    leftBottom = 5;
-    rightBottom = 200;
+    leftTop = -3;
+    rightTop = 7;
+    leftBottom = 1;
+    rightBottom = -5;
 
     glutInit(&argc, argv);
     glutInitWindowSize(800,600);
