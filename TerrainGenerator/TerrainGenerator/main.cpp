@@ -1,6 +1,6 @@
 //
 //  main.cpp
-//  TerrainGenerator
+//  terrainGenerator
 //
 //  Created by Leonardo Gutiérrez on 3/12/16.
 //  Copyright © 2016 Leonardo Gutiérrez. All rights reserved.
@@ -19,8 +19,8 @@
 
 using namespace std;
 
-#define CAMSPEED 0.01f // Camera Speed
-#define CAMSPEED2 0.1f // Camera Speed
+#define CAMSPEED 0.1f // Camera Speed
+#define CAMSPEED2 1.0f // Camera Speed
 
 //Offset
 int O = 30;
@@ -28,12 +28,12 @@ int O = 30;
 int Ni = 1;
 
 //Size of the chart
-const int n = 3, MATRIX_LENGTH = pow(2,n) + 1;
+const int n = 5, MATRIX_LENGTH = pow(2,n) + 1;
 
-float A[100][100] = {0};
+float A[1000][1000] = {0};
 
-float mPosX = 16, mPosY = 10, mPosZ = 3; // Position
-float mViewX = 0, mViewY = 0.5, mViewZ = 0; // Target to view
+float mPosX = MATRIX_LENGTH, mPosY = 10, mPosZ = 0; // Position
+float mViewX = 0, mViewY = 0, mViewZ = 0; // Target to view
 float mUpX = 0, mUpY = 1, mUpZ = 0; // Up position
 
 float  mouse_x = 0, mouse_y = 0; //coordinates from mouse
@@ -70,20 +70,24 @@ void makeMatrix(float leftTop, float rightTop, float leftBottom, float rightBott
         for(int j = i; j < MATRIX_LENGTH - 1; j+=increment){
             
             for(int k = i; k < MATRIX_LENGTH - 1; k+=increment){
-                A[k + i][j] = (A[k+i][j+i] + A[k+i][j-i])/2;
-                A[k - i][j] = (A[k-i][j+i] + A[k-i][j-i])/2;
-                A[k][j + i] = (A[k+i][j+i] + A[k-i][j+i])/2;
-                A[k][j - i] = (A[k+i][j-i] + A[k-i][j-i])/2;
+                random = (rand()%100)/100;
+                A[k + i][j] = (A[k+i][j+i] + A[k+i][j-i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
+                random = (rand()%100)/100;
+                A[k - i][j] = (A[k-i][j+i] + A[k-i][j-i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
+                random = (rand()%100)/100;
+                A[k][j + i] = (A[k+i][j+i] + A[k-i][j+i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
+                random = (rand()%100)/100;
+                A[k][j - i] = (A[k+i][j-i] + A[k-i][j-i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
                 
+                random = (rand()%100)/100;
                 A[k][j] = (A[k+i][j] + A[k-i][j] + A[k][j + i] + A[k][j-i])/4;
+                //+ O*(2*random-1)*pow(2,(-Ni*n));
             }
         }
         
         interpolationStart /= 2;
         increment = (int)ceil(increment/2.0);
     }
-    
-    //+O*(2*random-1)*pow(2,(-Ni*n));
 }
 
 
@@ -119,16 +123,66 @@ static void display(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    glColor3f(0.0, 1.0, 0.0);
     
     gluLookAt(mPosX, mPosY, mPosZ,
               mViewX, mViewY, mViewZ,
               mUpX, mUpY, mUpZ);
     
     glPushMatrix();
+    glBegin(GL_TRIANGLES);
+    for(int i = 0; i < (MATRIX_LENGTH-1); i++){
+        for(int j = 0; j < (MATRIX_LENGTH-1); j++){
+            glColor3f(0.0, 1.0, 0.0);
+            //Normal Triangles
+            glNormal3f(j, A[i][j], i);
+            glVertex3f(j, A[i][j], i);
+            
+            glNormal3f(j+1, A[i][j+1], i);
+            glVertex3f(j+1, A[i][j+1], i);
+            
+            glNormal3f(j, A[i+1][j], i+1);
+            glVertex3f(j, A[i+1][j], i+1);
+            
+            //Reverse triangles
+            glNormal3f(j+1, A[i+1][j+1], i+1);
+            glVertex3f(j+1, A[i+1][j+1], i+1);
+            
+            glNormal3f(j+1, A[i][j+1], i);
+            glVertex3f(j+1, A[i][j+1], i);
+            
+            glNormal3f(j, A[i+1][j], i+1);
+            glVertex3f(j, A[i+1][j], i+1);
+            
+            glColor3f(1.0, 0.0, 0.0);
+            //Inverse triangles
+            glNormal3f(j, A[i+1][j], -(i+1));
+            glVertex3f(j, A[i+1][j], -(i+1));
+            
+            glNormal3f(j, A[i][j], -i);
+            glVertex3f(j, A[i][j], -i);
+            
+            glNormal3f((j+1), A[i][j+1], -i);
+            glVertex3f((j+1), A[i][j+1], -i);
+            
+            //Reverse Inverse triangles
+            glNormal3f((j+1), A[i+1][j+1], -(i+1));
+            glVertex3f((j+1), A[i+1][j+1], -(i+1));
+            
+            glNormal3f((j+1), A[i][j+1], -i);
+            glVertex3f((j+1), A[i][j+1], -i);
+            
+            glNormal3f(j, A[i+1][j], -(i+1));
+            glVertex3f(j, A[i+1][j], -(i+1));
+            
+            
+        }
+    }
+    glEnd();
+
+    /*glBegin(GL_QUAD_STRIP);
     for(int i = 0; i < MATRIX_LENGTH; i++)
     {
-        glBegin(GL_QUAD_STRIP);
+        
         for(int j = 0; j < MATRIX_LENGTH; j++)
         {
             glNormal3f(j, A[i+1][j], i+1);
@@ -139,12 +193,15 @@ static void display(void)
             glVertex3f(j + 1, A[i+1][j+1], i+1);
             glNormal3f(j + 1, A[i][j+1], i);
             glVertex3f(j + 1, A[i][j+1], i);
-            
         }
-        glEnd();
+        
     }
+    
+    
+    glEnd();*/
     glPopMatrix();
     glutSwapBuffers();
+    //glutPostRedisplay();
     
 }
 
@@ -382,10 +439,10 @@ int main(int argc, char *argv[])
      cin >> leftBottom;
      cin >> rightBottom;*/
     
-    leftTop = 1;
-    rightTop = 20;
-    leftBottom = 5;
-    rightBottom = 200;
+    leftTop = -3;
+    rightTop = 7;
+    leftBottom = 1;
+    rightBottom = -5;
     
     glutInit(&argc, argv);
     glutInitWindowSize(800,600);
@@ -406,7 +463,7 @@ int main(int argc, char *argv[])
     glutIdleFunc(idle);
     glutPassiveMotionFunc( mouse_Movement );
     
-    glClearColor(1,1,1,1);
+    glClearColor(0,0,1,1);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     
