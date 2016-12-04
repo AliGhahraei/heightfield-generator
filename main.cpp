@@ -11,8 +11,12 @@
 
 using namespace std;
 
-#define CAMSPEED 0.01f // Camera Speed
-#define CAMSPEED2 0.1f // Camera Speed
+#define CAMSPEED 0.1f // Camera Speed
+#define CAMSPEED2 1.0f // Camera Speed
+#define SCREENWIDTH 800
+#define SCREENHEIGHT 600
+#define BUTTONWIDTH 100
+#define BUTTONHEIGHT 100
 
 //Offset
 int O = 30;
@@ -24,8 +28,8 @@ const int n = 5, MATRIX_LENGTH = pow(2,n) + 1;
 
 float A[MATRIX_LENGTH][MATRIX_LENGTH] = {0};
 
-float mPosX = MATRIX_LENGTH/2, mPosY = 50, mPosZ = 5; // Position
-float mViewX = MATRIX_LENGTH/2, mViewY = MATRIX_LENGTH/2, mViewZ = 0; // Target to view
+float mPosX = MATRIX_LENGTH, mPosY = 10, mPosZ = 0; // Position
+float mViewX = 0, mViewY = 0, mViewZ = 0; // Target to view
 float mUpX = 0, mUpY = 1, mUpZ = 0; // Up position
 
 float  mouse_x = 0, mouse_y = 0; //coordinates from mouse
@@ -111,6 +115,39 @@ static void resize(int width, int height)
     glLoadIdentity() ;
 }
 
+void drawButton(int startX, int startY, int width = BUTTONWIDTH, int height = BUTTONHEIGHT){
+    glVertex2f(startX, startY);
+    glVertex2f(startX + width, startY);
+    glVertex2f(startX + width, startY + height);
+    glVertex2f(startX, startY + height);
+}
+
+void drawButtons(){
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0.0, SCREENWIDTH, SCREENHEIGHT, 0.0, -1.0, 10.0);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glDisable(GL_CULL_FACE);
+
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    glColor3f(0.5, 0.5, 0.5);
+
+    glBegin(GL_QUADS);
+    drawButton(0, 0);
+    drawButton(BUTTONWIDTH + 1, 0);
+    glEnd();
+
+    // Making sure we can render 3d again
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+}
+
 static void display(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -122,25 +159,39 @@ static void display(void)
               mUpX, mUpY, mUpZ);
 
     glPushMatrix();
-    glBegin(GL_QUAD_STRIP);
+    glBegin(GL_TRIANGLES);
     for(int i = 0; i < MATRIX_LENGTH; i++)
     {
 
         for(int j = 0; j < MATRIX_LENGTH; j++)
         {
-            glNormal3f(j, A[i+1][j], i+1);
-            glVertex3f(j, A[i+1][j], i+1);
-            glNormal3f(j, A[i][j], i);
-            glVertex3f(j, A[i][j], i);
-            glNormal3f(j + 1, A[i+1][j+1], i+1);
-            glVertex3f(j + 1, A[i+1][j+1], i+1);
-            glNormal3f(j + 1, A[i][j+1], i);
-            glVertex3f(j + 1, A[i][j+1], i);
+            // Fst
+            glNormal3f(j, -A[i][j], i);
+            glVertex3f(j, -A[i][j], i);
+
+            glNormal3f(j, -A[i+1][j], i+1);
+            glVertex3f(j, -A[i+1][j], i+1);
+
+            glNormal3f(j + 1, -A[i][j+1], i);
+            glVertex3f(j + 1, -A[i][j+1], i);
+
+            // Snd
+            glNormal3f(j + 1, -A[i][j+1], i);
+            glVertex3f(j + 1, -A[i][j+1], i);
+
+            glNormal3f(j, -A[i+1][j], i+1);
+            glVertex3f(j, -A[i+1][j], i+1);
+
+            glNormal3f(j + 1, -A[i+1][j+1], i+1);
+            glVertex3f(j + 1, -A[i+1][j+1], i+1);
         }
 
     }
     glEnd();
     glPopMatrix();
+
+    drawButtons();
+
     glutSwapBuffers();
 
 }
@@ -343,6 +394,27 @@ static void key(unsigned char key, int x, int y)
     glutPostRedisplay();
 }
 
+void mouseEvent(int button, int state, int x, int y){
+    bool isLeftMouseButton = button == GLUT_LEFT_BUTTON;
+    bool isReleased = state == GLUT_UP;
+
+    if(isLeftMouseButton && isReleased){
+        bool isLeftMenuButton = (x>=0 && x<=BUTTONWIDTH) && (y>=0 && y<=BUTTONHEIGHT);
+        bool isRightMenuButton = (x>BUTTONWIDTH && x<=(BUTTONWIDTH * 2) + 1)
+                                 && (y>=0 && y<=BUTTONHEIGHT);
+
+        if(isLeftMenuButton){
+            cout << "left" << endl;
+            glutPostRedisplay();
+        }
+
+        else if(isRightMenuButton){
+            cout << "right" << endl;
+            glutPostRedisplay();
+        }
+    }
+}
+
 static void idle(void)
 {
     // Clear Color and Depth Buffers
@@ -379,13 +451,13 @@ int main(int argc, char *argv[])
     cin >> leftBottom;
     cin >> rightBottom;*/
 
-    leftTop = -3;
-    rightTop = 7;
-    leftBottom = 1;
-    rightBottom = -5;
+    leftTop = 7;
+    rightTop = 3;
+    leftBottom = 5;
+    rightBottom = 4;
 
     glutInit(&argc, argv);
-    glutInitWindowSize(800,600);
+    glutInitWindowSize(SCREENWIDTH,SCREENHEIGHT);
     glutInitWindowPosition(10,10);
 
 
@@ -402,6 +474,7 @@ int main(int argc, char *argv[])
     glutSpecialFunc(Keyboard_Input);
     glutIdleFunc(idle);
     glutPassiveMotionFunc( mouse_Movement );
+    glutMouseFunc(mouseEvent);
 
     glClearColor(1,1,1,1);
     glEnable(GL_CULL_FACE);
