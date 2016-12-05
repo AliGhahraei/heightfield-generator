@@ -23,12 +23,15 @@ using namespace std;
 #define CAMSPEED2 1.0f // Camera Speed
 
 //Offset
-int O = 30;
+int O = 100;
 //Noise
 int Ni = 1;
 
+//RotationAngle
+float angle = 1.0;
+
 //Size of the chart
-const int n = 5, MATRIX_LENGTH = pow(2,n) + 1;
+const int n = 6, MATRIX_LENGTH = pow(2,n) + 1;
 
 float A[1000][1000] = {0};
 
@@ -113,7 +116,10 @@ static void resize(int width, int height)
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glFrustum(-ar, ar, -1.0, 1.0, 2.0, 100.0);
+    //glFrustum(-100, 100, -100, 100, 100, 100.0);
+    
+    //WorldSize
+    glOrtho(-50.0, 50.0, -50.0, 50.0, -150.0, 150.0);
     
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity() ;
@@ -129,28 +135,20 @@ static void display(void)
               mUpX, mUpY, mUpZ);
     float colorflt = 1.0;
     glPushMatrix();
+    int odd = 0;
     
-    for(int iX = 0; iX < (MATRIX_LENGTH-1); iX+=2){
+    glTranslatef(40.0 ,0.0 ,40.0);
+    glRotatef(angle, 0.0f, 1.0f, 0.0f);
+    angle++;
+    for(int iX = 0; iX < (MATRIX_LENGTH-1); iX++){
         glBegin(GL_QUAD_STRIP);
         for(int jY = 0; jY < (MATRIX_LENGTH-1); jY++){
-            glColor3f(0.5, 0.0, 1.0);
-            //glNormal3f(iX+1, A[iX+1][jY], jY);
-            glVertex3f(iX+1, A[iX+1][jY], jY);
-            glColor3f(1.0, 1.0, 0.0);
-            //glNormal3f(iX, A[iX][jY], jY);
-            glVertex3f(iX, A[iX][jY], jY);
- 
-        }
-        glEnd();
-        glBegin(GL_QUAD_STRIP);
-        for(int jY = 0; jY < (MATRIX_LENGTH-1); jY++){
-            glColor3f(1.0, 1.0, 0.0);
-            //glNormal3f(iX+2, A[iX][jY], jY);
-            glVertex3f(iX+2, A[iX][jY], jY);
-            glColor3f(0.5, 0.0, 1.0);
-            //glNormal3f(iX+1, A[iX+1][jY], jY);
-            glVertex3f(iX+1, A[iX+1][jY], jY);
-            
+                glColor3f(0.0, 0.0, 0.0);
+                glNormal3f(iX+1, A[iX+1][jY], jY);
+                glVertex3f(iX+1, A[iX+1][jY], jY);
+                glColor3f(107.0/255.0, 68.0/255.0, 35.0/255.0);
+                glNormal3f(iX, A[iX][jY], jY);
+                glVertex3f(iX, A[iX][jY], jY);
         }
         glEnd();
     }
@@ -394,7 +392,7 @@ static void idle(void)
 }
 
 
-const GLfloat light_ambient[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
+const GLfloat light_ambient[]  = { 0.5f, 0.5f, 0.5f, 1.0f };
 const GLfloat light_diffuse[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
 const GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 const GLfloat light_position[] = { 2.0f, 5.0f, 5.0f, 0.0f };
@@ -415,7 +413,7 @@ int main(int argc, char *argv[])
      cin >> leftBottom;
      cin >> rightBottom;*/
     
-    leftTop = -3;
+    leftTop = -1;
     rightTop = 7;
     leftBottom = 1;
     rightBottom = -5;
@@ -439,7 +437,10 @@ int main(int argc, char *argv[])
     glutIdleFunc(idle);
     glutPassiveMotionFunc( mouse_Movement );
     
-    glClearColor(1,1,1,1);
+    //WorldSize
+    glOrtho(-1000.0, 1000.0, -1000.0, 1000.0, -1000.0, 1000.0);
+    
+    glClearColor(0,0.5,0.8,1);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     
