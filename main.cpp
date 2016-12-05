@@ -463,10 +463,10 @@ static void key(unsigned char key, int x, int y)
             BoomCamera(-CAMSPEED2);
             break;
         case 'a':
-            DollyCamera(-CAMSPEED2);
+            DollyCamera(CAMSPEED2);
             break;
         case 'd':
-            DollyCamera(CAMSPEED2);
+            DollyCamera(-CAMSPEED2);
             break;
 
     }
