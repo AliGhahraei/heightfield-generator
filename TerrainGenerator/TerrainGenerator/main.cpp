@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <fstream>
 
 using namespace std;
 
@@ -23,7 +24,7 @@ using namespace std;
 #define CAMSPEED2 1.0f // Camera Speed
 
 //Offset
-int O = 100;
+int O = 200;
 //Noise
 int Ni = 1;
 
@@ -46,6 +47,31 @@ bool move_x = false, move_y = false, move_z = false; // simple moves flags
 bool tilt = false, roll = false, pan = false; // transformations of camera
 bool freeMove = false; // free camera movement
 int iWidth, iHeight; // size of the window
+
+void makeObj(){
+    cout<<"IMPRIMIENDO OBJ"<<endl;
+    ofstream archivo;
+    archivo.open("terreno.obj");
+    
+    //Vertices
+    int cantVertices = 0;
+    for(int iX = 0; iX < (MATRIX_LENGTH-1); iX++){
+        glBegin(GL_QUAD_STRIP);
+        for(int jY = 0; jY < (MATRIX_LENGTH-1); jY++){
+            cantVertices++;
+            archivo<<"v "<<iX+1<<" "<<A[iX+1][jY]<<" "<<jY<<endl;
+        }
+        glEnd();
+    }
+    
+    //Faces
+    for(int xIt = 1; xIt <= cantVertices; xIt+=4)
+    {
+        archivo<<"f "<<" "<<xIt<<" "<<xIt+1<<" "<<xIt+2<<" "<<xIt+3<<endl;
+    }
+    archivo.close();
+    cout<<"TERMINA OBJ"<<endl;
+}
 
 void makeMatrix(float leftTop, float rightTop, float leftBottom, float rightBottom)
 {
@@ -153,26 +179,7 @@ static void display(void)
         glEnd();
     }
 
-    /*glBegin(GL_QUAD_STRIP);
-    for(int i = 0; i < MATRIX_LENGTH; i++)
-    {
-        
-        for(int j = 0; j < MATRIX_LENGTH; j++)
-        {
-            glNormal3f(j, A[i+1][j], i+1);
-            glVertex3f(j, A[i+1][j], i+1);
-            glNormal3f(j, A[i][j], i);
-            glVertex3f(j, A[i][j], i);
-            glNormal3f(j + 1, A[i+1][j+1], i+1);
-            glVertex3f(j + 1, A[i+1][j+1], i+1);
-            glNormal3f(j + 1, A[i][j+1], i);
-            glVertex3f(j + 1, A[i][j+1], i);
-        }
-        
-    }
-    
-    
-    glEnd();*/
+
     glPopMatrix();
     glutSwapBuffers();
     glutPostRedisplay();
@@ -416,7 +423,7 @@ int main(int argc, char *argv[])
     leftTop = -1;
     rightTop = 7;
     leftBottom = 1;
-    rightBottom = -5;
+    rightBottom = -33;
     
     glutInit(&argc, argv);
     glutInitWindowSize(800,600);
@@ -461,6 +468,8 @@ int main(int argc, char *argv[])
     glMaterialfv(GL_FRONT, GL_DIFFUSE,   mat_diffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR,  mat_specular);
     glMaterialfv(GL_FRONT, GL_SHININESS, high_shininess);
+    
+    makeObj();
     
     glutMainLoop();
 }
