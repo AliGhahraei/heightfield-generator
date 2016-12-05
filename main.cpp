@@ -116,16 +116,21 @@ void makeMatrix(float leftTop, float rightTop, float leftBottom, float rightBott
         for(int j = i; j < MATRIX_LENGTH - 1; j+=increment){
 
             for(int k = i; k < MATRIX_LENGTH - 1; k+=increment){
-                random = (rand()%100)/100;
+                random = (rand()%100)/100.0;
+                cout << random << endl;
                 A[k + i][j] = (A[k+i][j+i] + A[k+i][j-i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
-                random = (rand()%100)/100;
+                random = (rand()%100)/100.0;
+                cout << random << endl;
                 A[k - i][j] = (A[k-i][j+i] + A[k-i][j-i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
-                random = (rand()%100)/100;
+                random = (rand()%100)/100.0;
+                cout << random << endl;
                 A[k][j + i] = (A[k+i][j+i] + A[k-i][j+i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
-                random = (rand()%100)/100;
+                random = (rand()%100)/100.0;
+                cout << random << endl;
                 A[k][j - i] = (A[k+i][j-i] + A[k-i][j-i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
 
-                random = (rand()%100)/100;
+                random = (rand()%100)/100.0;
+                cout << random << endl;
                 A[k][j] = (A[k+i][j] + A[k-i][j] + A[k][j + i] + A[k][j-i])/4
                 + O*(2*random-1)*pow(2,(-Ni*n));
             }
