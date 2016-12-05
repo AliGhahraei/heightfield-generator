@@ -315,8 +315,6 @@ void DollyCamera(float speed)
 {
     mPosX = mPosX + speed;
     mViewX = mViewX + speed;
-    //mPosZ = mPosZ + speed;
-    //mViewZ = mViewZ + speed;
 }
 
 void RollCamera(float speed)
