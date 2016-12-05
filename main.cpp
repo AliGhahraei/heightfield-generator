@@ -116,16 +116,16 @@ void makeMatrix(float leftTop, float rightTop, float leftBottom, float rightBott
         for(int j = i; j < MATRIX_LENGTH - 1; j+=increment){
 
             for(int k = i; k < MATRIX_LENGTH - 1; k+=increment){
-                random = (rand()%100)/100;
+                random = (rand()%100)/100.0;
                 A[k + i][j] = (A[k+i][j+i] + A[k+i][j-i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
-                random = (rand()%100)/100;
+                random = (rand()%100)/100.0;
                 A[k - i][j] = (A[k-i][j+i] + A[k-i][j-i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
-                random = (rand()%100)/100;
+                random = (rand()%100)/100.0;
                 A[k][j + i] = (A[k+i][j+i] + A[k-i][j+i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
-                random = (rand()%100)/100;
+                random = (rand()%100)/100.0;
                 A[k][j - i] = (A[k+i][j-i] + A[k-i][j-i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
 
-                random = (rand()%100)/100;
+                random = (rand()%100)/100.0;
                 A[k][j] = (A[k+i][j] + A[k-i][j] + A[k][j + i] + A[k][j-i])/4
                 + O*(2*random-1)*pow(2,(-Ni*n));
             }
@@ -315,6 +315,8 @@ void DollyCamera(float speed)
 {
     mPosX = mPosX + speed;
     mViewX = mViewX + speed;
+    //mPosZ = mPosZ + speed;
+    //mViewZ = mViewZ + speed;
 }
 
 void RollCamera(float speed)
@@ -551,8 +553,8 @@ void mouseEvent(int button, int state, int x, int y){
 
         else if(clicked(BUTTONS[8], x, y)){
             cout << "roughnessDown" << endl;
-            if(O != 10){
-                O-=10;
+            if(O != 5){
+                O -= 5;
                 makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
                 glutPostRedisplay();
             }
@@ -560,7 +562,7 @@ void mouseEvent(int button, int state, int x, int y){
 
         else if(clicked(BUTTONS[9], x, y)){
             cout << "roughnessUp" << endl;
-            O+=10;
+            O += 5;
             makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
             glutPostRedisplay();
         }
@@ -568,7 +570,7 @@ void mouseEvent(int button, int state, int x, int y){
         else if(clicked(BUTTONS[10], x, y)){
             cout << "SizeDown" << endl;
             if(n != 1){
-                n-=1;
+                n -= 1;
                 MATRIX_LENGTH = pow(2, n) + 1;
                 makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
                 glutPostRedisplay();
@@ -577,7 +579,7 @@ void mouseEvent(int button, int state, int x, int y){
 
         else if(clicked(BUTTONS[11], x, y)){
             cout << "SizeUp" << endl;
-            n+=1;
+            n += 1;
             MATRIX_LENGTH = pow(2, n) + 1;
             makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
             glutPostRedisplay();
