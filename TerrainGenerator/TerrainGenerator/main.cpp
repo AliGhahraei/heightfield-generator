@@ -57,7 +57,7 @@ float A[10000][10000] = {0};
 
 float mPosX = MATRIX_LENGTH, mPosY = 10, mPosZ = 0; // Position
 float mViewX = 0, mViewY = 0, mViewZ = 0; // Target to view
-float mUpX = 0, mUpY = -1, mUpZ = 0; // Up position
+float mUpX = 0, mUpY = 1, mUpZ = 0; // Up position
 
 float  mouse_x = 0, mouse_y = 0; //coordinates from mouse
 float past_x = 0, past_y = 0;
@@ -75,12 +75,10 @@ void makeObj(){
     //Vertices
     int cantVertices = 0;
     for(int iX = 0; iX < (MATRIX_LENGTH-1); iX++){
-        glBegin(GL_QUAD_STRIP);
         for(int jY = 0; jY < (MATRIX_LENGTH-1); jY++){
             cantVertices++;
             archivo<<"v "<<iX+1<<" "<<A[iX+1][jY]<<" "<<jY<<endl;
         }
-        glEnd();
     }
 
     //Faces
@@ -621,7 +619,7 @@ int main(int argc, char *argv[])
     leftTop = -1;
     rightTop = 7;
     leftBottom = 1;
-    rightBottom = -33;
+    rightBottom = -3;
 
     glutInit(&argc, argv);
     glutInitWindowSize(SCREENWIDTH,SCREENHEIGHT);
