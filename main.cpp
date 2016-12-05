@@ -55,7 +55,7 @@ float BUTTONS [BUTTONNUMBER][4] = {
 
 float A[10000][10000] = {0};
 
-float mPosX = MATRIX_LENGTH, mPosY = 10, mPosZ = 0; // Position
+float mPosX = MATRIX_LENGTH, mPosY = MATRIX_LENGTH, mPosZ = MATRIX_LENGTH; // Position
 float mViewX = 0, mViewY = 0, mViewZ = 0; // Target to view
 float mUpX = 0, mUpY = 1, mUpZ = 0; // Up position
 
@@ -159,10 +159,10 @@ static void resize(int width, int height)
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    //glFrustum(-ar, ar, -1.0, 1.0, 2.0, 100.0);
+    glFrustum(-ar, ar, -1.0, 1.0, 2.0, 10000.0);
 
     //WorldSize
-    glOrtho(-50.0, 50.0, -50.0, 50.0, -150.0, 150.0);
+    //glOrtho(-50.0, 50.0, -50.0, 50.0, -150.0, 150.0);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity() ;
@@ -217,9 +217,12 @@ static void display(void)
 
     int odd = 0;
 
-    glTranslatef(40.0 ,0.0 ,40.0);
+
+    //glTranslatef(40.0 ,40.0 ,40.0);
+    glTranslatef(0.0, 0.0, 0.0);
     glRotatef(angle, 0.0f, 1.0f, 0.0f);
-    angle++;
+    //angle++;
+
     for(int iX = 0; iX < (MATRIX_LENGTH-1); iX++){
         glBegin(GL_QUAD_STRIP);
         for(int jY = 0; jY < (MATRIX_LENGTH-1); jY++){
@@ -236,12 +239,14 @@ static void display(void)
     glPopMatrix();
 
     /*
-    glBegin(GL_TRIANGLES);
+    glBegin(GL_TRIANGLE_STRIP);
     for(int i = 0; i < MATRIX_LENGTH; i++)
     {
 
         for(int j = 0; j < MATRIX_LENGTH; j++)
         {
+
+            glColor3f(0.0, 0.0, 0.0);
             // Fst
             glNormal3f(j, -A[i][j], i);
             glVertex3f(j, -A[i][j], i);
@@ -252,6 +257,7 @@ static void display(void)
             glNormal3f(j + 1, -A[i][j+1], i);
             glVertex3f(j + 1, -A[i][j+1], i);
 
+            glColor3f(107.0/255.0, 68.0/255.0, 35.0/255.0);
             // Snd
             glNormal3f(j + 1, -A[i][j+1], i);
             glVertex3f(j + 1, -A[i][j+1], i);
@@ -261,12 +267,13 @@ static void display(void)
 
             glNormal3f(j + 1, -A[i+1][j+1], i+1);
             glVertex3f(j + 1, -A[i+1][j+1], i+1);
+
         }
 
     }
     glEnd();
     glPopMatrix();
-     */
+    */
 
     drawButtons();
 
@@ -277,13 +284,14 @@ static void display(void)
 void MoveCamera(float speed)
 {
     float mAuxX = mViewX - mPosX;
-    float mAuxY = mViewY - mPosY;
+    //float mAuxY = mViewY - mPosY;
     float mAuxZ = mViewZ - mPosZ;
 
     mPosX = mPosX + mAuxX * speed;
     mPosZ = mPosZ + mAuxZ * speed;
     mViewX = mViewX + mAuxX * speed;
     mViewZ = mViewZ + mAuxZ * speed;
+
 }
 
 void RotateView(float speed)
@@ -294,6 +302,7 @@ void RotateView(float speed)
 
     mViewZ = (float)(mPosZ + sin(speed)*vAuxX + cos(speed)*vAuxZ);
     mViewX = (float)(mPosX + cos(speed)*vAuxX - sin(speed)*vAuxZ);
+
 }
 
 void BoomCamera(float speed)
@@ -325,6 +334,11 @@ void TiltCamera(float speed)
 {
     mViewY = mViewY + (float) sin(speed);
     mUpY = mUpY + (float) sin(speed);
+}
+
+void rotateMap(float speed)
+{
+    angle += speed;
 }
 
 void mouse_Movement(int x, int y)
@@ -465,6 +479,12 @@ static void key(unsigned char key, int x, int y)
             break;
         case 'd':
             DollyCamera(-CAMSPEED2);
+            break;
+        case '+':
+            rotateMap(CAMSPEED2);
+            break;
+        case '-':
+            rotateMap(-CAMSPEED2);
             break;
 
     }
@@ -616,10 +636,10 @@ int main(int argc, char *argv[])
     }
      */
 
-    leftTop = -1;
-    rightTop = 7;
-    leftBottom = 1;
-    rightBottom = -33;
+    leftTop = -8;
+    rightTop = 25;
+    leftBottom = 0;
+    rightBottom = -5;
 
     glutInit(&argc, argv);
     glutInitWindowSize(SCREENWIDTH,SCREENHEIGHT);
@@ -642,7 +662,7 @@ int main(int argc, char *argv[])
     glutMouseFunc(mouseEvent);
 
     //WorldSize
-    glOrtho(-1000.0, 1000.0, -1000.0, 1000.0, -1000.0, 1000.0);
+    //glOrtho(-1000.0, 1000.0, -1000.0, 1000.0, -1000.0, 1000.0);
     glClearColor(0,0.5,0.8,1);
 
     glEnable(GL_CULL_FACE);
