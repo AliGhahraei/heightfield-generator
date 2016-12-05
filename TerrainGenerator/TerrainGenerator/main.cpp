@@ -1,11 +1,3 @@
-//
-//  main.cpp
-//  terrainGenerator
-//
-//  Created by Leonardo Gutiérrez on 3/12/16.
-//  Copyright © 2016 Leonardo Gutiérrez. All rights reserved.
-//
-
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #else
@@ -16,25 +8,56 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <fstream>
 
 using namespace std;
 
 #define CAMSPEED 0.1f // Camera Speed
 #define CAMSPEED2 1.0f // Camera Speed
+#define SCREENWIDTH 800
+#define SCREENHEIGHT 600
+#define BUTTONWIDTH 50
+#define BUTTONHEIGHT 50
+#define BUTTONNUMBER 12
+
+int leftTop, rightTop, leftBottom, rightBottom;
 
 //Offset
 int O = 30;
 //Noise
 int Ni = 1;
 
-//Size of the chart
-const int n = 5, MATRIX_LENGTH = pow(2,n) + 1;
+//RotationAngle
+float angle = 1.0;
 
-float A[1000][1000] = {0};
+//Size of the chart
+int n = 5, MATRIX_LENGTH = pow(2,n) + 1;
+
+//Buttons
+float BUTTONS [BUTTONNUMBER][4] = {
+        // WASD
+        {0, SCREENHEIGHT - 2 * BUTTONHEIGHT},
+        {2 * BUTTONWIDTH, SCREENHEIGHT - 2 * BUTTONHEIGHT},
+        {BUTTONWIDTH, SCREENHEIGHT - BUTTONHEIGHT},
+        {BUTTONWIDTH, SCREENHEIGHT - 3 * BUTTONHEIGHT},
+        // Arrows
+        {SCREENWIDTH - (3 * BUTTONWIDTH), SCREENHEIGHT - 2 * BUTTONHEIGHT},
+        {SCREENWIDTH - BUTTONWIDTH, SCREENHEIGHT - 2 * BUTTONHEIGHT},
+        {SCREENWIDTH - (2 * BUTTONWIDTH), SCREENHEIGHT - BUTTONHEIGHT},
+        {SCREENWIDTH - (2 * BUTTONWIDTH), SCREENHEIGHT - 3 * BUTTONHEIGHT},
+        // Roughness
+        {3*SCREENWIDTH/8, SCREENHEIGHT - BUTTONHEIGHT},
+        {3*SCREENWIDTH/8 + BUTTONWIDTH + 5, SCREENHEIGHT - BUTTONHEIGHT},
+        // Size
+        {5*SCREENWIDTH/8, SCREENHEIGHT - BUTTONHEIGHT},
+        {(5*SCREENWIDTH/8) + BUTTONWIDTH + 5, SCREENHEIGHT - BUTTONHEIGHT},
+};
+
+float A[10000][10000] = {0};
 
 float mPosX = MATRIX_LENGTH, mPosY = 10, mPosZ = 0; // Position
 float mViewX = 0, mViewY = 0, mViewZ = 0; // Target to view
-float mUpX = 0, mUpY = 1, mUpZ = 0; // Up position
+float mUpX = 0, mUpY = -1, mUpZ = 0; // Up position
 
 float  mouse_x = 0, mouse_y = 0; //coordinates from mouse
 float past_x = 0, past_y = 0;
@@ -44,31 +67,56 @@ bool tilt = false, roll = false, pan = false; // transformations of camera
 bool freeMove = false; // free camera movement
 int iWidth, iHeight; // size of the window
 
+void makeObj(){
+    cout<<"IMPRIMIENDO OBJ"<<endl;
+    ofstream archivo;
+    archivo.open("terreno.obj");
+
+    //Vertices
+    int cantVertices = 0;
+    for(int iX = 0; iX < (MATRIX_LENGTH-1); iX++){
+        glBegin(GL_QUAD_STRIP);
+        for(int jY = 0; jY < (MATRIX_LENGTH-1); jY++){
+            cantVertices++;
+            archivo<<"v "<<iX+1<<" "<<A[iX+1][jY]<<" "<<jY<<endl;
+        }
+        glEnd();
+    }
+
+    //Faces
+    for(int xIt = 1; xIt <= cantVertices; xIt+=4)
+    {
+        archivo<<"f "<<" "<<xIt<<" "<<xIt+1<<" "<<xIt+2<<" "<<xIt+3<<endl;
+    }
+    archivo.close();
+    cout<<"TERMINA OBJ"<<endl;
+}
+
 void makeMatrix(float leftTop, float rightTop, float leftBottom, float rightBottom)
 {
-    
+
     srand (time(NULL));
-    
+
     int lastIndex = MATRIX_LENGTH - 1;
-    
+
     // Corner initialization
     A[0][0] = leftTop;
     A[0][lastIndex] = rightTop;
     A[lastIndex][0] = leftBottom;
     A[lastIndex][lastIndex] = rightBottom;
-    
+
     // Random to add to each cell
     double random;
-    
+
     // First cell to modify
     int interpolationStart = (int)floor(MATRIX_LENGTH/2);
-    
+
     //Increment
     int increment = lastIndex - 1;
-    
+
     for(int i = interpolationStart; i >= 1; i -= (int)ceil(i/2.0)){
         for(int j = i; j < MATRIX_LENGTH - 1; j+=increment){
-            
+
             for(int k = i; k < MATRIX_LENGTH - 1; k+=increment){
                 random = (rand()%100)/100;
                 A[k + i][j] = (A[k+i][j+i] + A[k+i][j-i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
@@ -78,13 +126,13 @@ void makeMatrix(float leftTop, float rightTop, float leftBottom, float rightBott
                 A[k][j + i] = (A[k+i][j+i] + A[k-i][j+i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
                 random = (rand()%100)/100;
                 A[k][j - i] = (A[k+i][j-i] + A[k-i][j-i])/2 +O*(2*random-1)*pow(2,(-Ni*n));
-                
+
                 random = (rand()%100)/100;
-                A[k][j] = (A[k+i][j] + A[k-i][j] + A[k][j + i] + A[k][j-i])/4;
-                //+ O*(2*random-1)*pow(2,(-Ni*n));
+                A[k][j] = (A[k+i][j] + A[k-i][j] + A[k][j + i] + A[k][j-i])/4
+                + O*(2*random-1)*pow(2,(-Ni*n));
             }
         }
-        
+
         interpolationStart /= 2;
         increment = (int)ceil(increment/2.0);
     }
@@ -113,96 +161,119 @@ static void resize(int width, int height)
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glFrustum(-ar, ar, -1.0, 1.0, 2.0, 100.0);
-    
+    //glFrustum(-ar, ar, -1.0, 1.0, 2.0, 100.0);
+
+    //WorldSize
+    glOrtho(-50.0, 50.0, -50.0, 50.0, -150.0, 150.0);
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity() ;
+}
+
+void drawButton(float* button){
+    glVertex2f(button[0], button[1]);
+    glVertex2f(button[2], button[1]);
+    glVertex2f(button[2], button[3]);
+    glVertex2f(button[0], button[3]);
+}
+
+void drawButtons(){
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0.0, SCREENWIDTH, SCREENHEIGHT, 0.0, -1.0, 10.0);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glDisable(GL_CULL_FACE);
+
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    glColor3f(0.5, 0.5, 0.5);
+
+    glBegin(GL_QUADS);
+    for(int i = 0; i < BUTTONNUMBER; i++){
+        drawButton(BUTTONS[i]);
+    }
+    glEnd();
+
+    // Making sure we can render 3d again
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
 }
 
 static void display(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-    
+    glEnable(GL_DEPTH_TEST);
+
     gluLookAt(mPosX, mPosY, mPosZ,
               mViewX, mViewY, mViewZ,
               mUpX, mUpY, mUpZ);
-    
-    glPushMatrix();
-    glBegin(GL_TRIANGLES);
-    for(int i = 0; i < (MATRIX_LENGTH-1); i++){
-        for(int j = 0; j < (MATRIX_LENGTH-1); j++){
-            glColor3f(0.0, 1.0, 0.0);
-            //Normal Triangles
-            glNormal3f(j, A[i][j], i);
-            glVertex3f(j, A[i][j], i);
-            
-            glNormal3f(j+1, A[i][j+1], i);
-            glVertex3f(j+1, A[i][j+1], i);
-            
-            glNormal3f(j, A[i+1][j], i+1);
-            glVertex3f(j, A[i+1][j], i+1);
-            
-            //Reverse triangles
-            glNormal3f(j+1, A[i+1][j+1], i+1);
-            glVertex3f(j+1, A[i+1][j+1], i+1);
-            
-            glNormal3f(j+1, A[i][j+1], i);
-            glVertex3f(j+1, A[i][j+1], i);
-            
-            glNormal3f(j, A[i+1][j], i+1);
-            glVertex3f(j, A[i+1][j], i+1);
-            
-            glColor3f(1.0, 0.0, 0.0);
-            //Inverse triangles
-            glNormal3f(j, A[i+1][j], -(i+1));
-            glVertex3f(j, A[i+1][j], -(i+1));
-            
-            glNormal3f(j, A[i][j], -i);
-            glVertex3f(j, A[i][j], -i);
-            
-            glNormal3f((j+1), A[i][j+1], -i);
-            glVertex3f((j+1), A[i][j+1], -i);
-            
-            //Reverse Inverse triangles
-            glNormal3f((j+1), A[i+1][j+1], -(i+1));
-            glVertex3f((j+1), A[i+1][j+1], -(i+1));
-            
-            glNormal3f((j+1), A[i][j+1], -i);
-            glVertex3f((j+1), A[i][j+1], -i);
-            
-            glNormal3f(j, A[i+1][j], -(i+1));
-            glVertex3f(j, A[i+1][j], -(i+1));
-            
-            
-        }
-    }
-    glEnd();
 
-    /*glBegin(GL_QUAD_STRIP);
+    float colorflt = 1.0;
+
+    glPushMatrix();
+
+    int odd = 0;
+
+    glTranslatef(40.0 ,0.0 ,40.0);
+    glRotatef(angle, 0.0f, 1.0f, 0.0f);
+    angle++;
+    for(int iX = 0; iX < (MATRIX_LENGTH-1); iX++){
+        glBegin(GL_QUAD_STRIP);
+        for(int jY = 0; jY < (MATRIX_LENGTH-1); jY++){
+            glColor3f(0.0, 0.0, 0.0);
+            glNormal3f(iX+1, A[iX+1][jY], jY);
+            glVertex3f(iX+1, A[iX+1][jY], jY);
+            glColor3f(107.0/255.0, 68.0/255.0, 35.0/255.0);
+            glNormal3f(iX, A[iX][jY], jY);
+            glVertex3f(iX, A[iX][jY], jY);
+        }
+        glEnd();
+    }
+
+    glPopMatrix();
+
+    /*
+    glBegin(GL_TRIANGLES);
     for(int i = 0; i < MATRIX_LENGTH; i++)
     {
-        
+
         for(int j = 0; j < MATRIX_LENGTH; j++)
         {
-            glNormal3f(j, A[i+1][j], i+1);
-            glVertex3f(j, A[i+1][j], i+1);
-            glNormal3f(j, A[i][j], i);
-            glVertex3f(j, A[i][j], i);
-            glNormal3f(j + 1, A[i+1][j+1], i+1);
-            glVertex3f(j + 1, A[i+1][j+1], i+1);
-            glNormal3f(j + 1, A[i][j+1], i);
-            glVertex3f(j + 1, A[i][j+1], i);
+            // Fst
+            glNormal3f(j, -A[i][j], i);
+            glVertex3f(j, -A[i][j], i);
+
+            glNormal3f(j, -A[i+1][j], i+1);
+            glVertex3f(j, -A[i+1][j], i+1);
+
+            glNormal3f(j + 1, -A[i][j+1], i);
+            glVertex3f(j + 1, -A[i][j+1], i);
+
+            // Snd
+            glNormal3f(j + 1, -A[i][j+1], i);
+            glVertex3f(j + 1, -A[i][j+1], i);
+
+            glNormal3f(j, -A[i+1][j], i+1);
+            glVertex3f(j, -A[i+1][j], i+1);
+
+            glNormal3f(j + 1, -A[i+1][j+1], i+1);
+            glVertex3f(j + 1, -A[i+1][j+1], i+1);
         }
-        
+
     }
-    
-    
-    glEnd();*/
+    glEnd();
     glPopMatrix();
+     */
+
+    drawButtons();
+
     glutSwapBuffers();
-    //glutPostRedisplay();
-    
+
 }
 
 void MoveCamera(float speed)
@@ -210,7 +281,7 @@ void MoveCamera(float speed)
     float mAuxX = mViewX - mPosX;
     float mAuxY = mViewY - mPosY;
     float mAuxZ = mViewZ - mPosZ;
-    
+
     mPosX = mPosX + mAuxX * speed;
     mPosZ = mPosZ + mAuxZ * speed;
     mViewX = mViewX + mAuxX * speed;
@@ -222,7 +293,7 @@ void RotateView(float speed)
     float vAuxX = mViewX - mPosX;
     float vAuxY = mViewY - mPosY;
     float vAuxZ = mViewZ - mPosZ;
-    
+
     mViewZ = (float)(mPosZ + sin(speed)*vAuxX + cos(speed)*vAuxZ);
     mViewX = (float)(mPosX + cos(speed)*vAuxX - sin(speed)*vAuxZ);
 }
@@ -244,10 +315,10 @@ void RollCamera(float speed)
     float vAuxX = mViewX - mPosX;
     float vAuxY = mViewY - mPosY;
     float vAuxZ = mViewZ - mPosZ;
-    
+
     //mViewZ = (float)(mPosZ + sin(speed)*vAuxX + cos(speed)*vAuxZ);
     //mViewX = (float)(mPosX + cos(speed)*vAuxX - sin(speed)*vAuxZ);
-    
+
     mViewX = (float)(mPosX + sin(speed)*vAuxY + cos(speed)*vAuxX);
     mViewY = (float)(mPosY + cos(speed)*vAuxY - sin(speed)*vAuxX);
 }
@@ -300,7 +371,7 @@ void mouse_Movement(int x, int y)
             mViewY = (float) 0.01 * (mouse_y - (iHeight / 2.0));
             mViewZ = 0.5;
         }
-        
+
     }
 }
 
@@ -336,7 +407,7 @@ static void key(unsigned char key, int x, int y)
         case 'q':
             exit(0);
             break;
-            
+
         case 'x':
             move_x = (move_x)? false : true;
             freeMove = false;
@@ -397,10 +468,103 @@ static void key(unsigned char key, int x, int y)
         case 'd':
             DollyCamera(CAMSPEED2);
             break;
-            
+
     }
-    
+
     glutPostRedisplay();
+}
+
+bool clicked(float* button, int x, int y){
+    return (x>=button[0] && x<=button[2]) && (y>=button[1] && y<=button[3]);
+}
+
+void mouseEvent(int button, int state, int x, int y){
+    bool isLeftMouseButton = button == GLUT_LEFT_BUTTON;
+    bool isReleased = state == GLUT_UP;
+
+    if(isLeftMouseButton && isReleased){
+        if(clicked(BUTTONS[0], x, y)){
+            cout << "a" << endl;
+            DollyCamera(CAMSPEED2);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[1], x, y)){
+            cout << "d" << endl;
+            DollyCamera(-CAMSPEED2);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[2], x, y)){
+            cout << "s" << endl;
+            BoomCamera(-CAMSPEED2);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[3], x, y)){
+            cout << "w" << endl;
+            BoomCamera(CAMSPEED2);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[4], x, y)){
+            cout << "izq" << endl;
+            RotateView(-CAMSPEED);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[5], x, y)){
+            cout << "der" << endl;
+            RotateView(CAMSPEED);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[6], x, y)){
+            cout << "abajo" << endl;
+            MoveCamera(-CAMSPEED);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[7], x, y)){
+            cout << "arriba" << endl;
+            MoveCamera(CAMSPEED);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[8], x, y)){
+            cout << "roughnessDown" << endl;
+            if(O != 10){
+                O-=10;
+                makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
+                glutPostRedisplay();
+            }
+        }
+
+        else if(clicked(BUTTONS[9], x, y)){
+            cout << "roughnessUp" << endl;
+            O+=10;
+            makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[10], x, y)){
+            cout << "SizeDown" << endl;
+            if(n != 1){
+                n-=1;
+                MATRIX_LENGTH = pow(2, n) + 1;
+                makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
+                glutPostRedisplay();
+            }
+        }
+
+        else if(clicked(BUTTONS[11], x, y)){
+            cout << "SizeUp" << endl;
+            n+=1;
+            MATRIX_LENGTH = pow(2, n) + 1;
+            makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
+            glutPostRedisplay();
+        }
+    }
 }
 
 static void idle(void)
@@ -413,12 +577,12 @@ static void idle(void)
     gluLookAt(mPosX, mPosY, mPosZ,
               mViewX, mViewY, mViewZ,
               mUpX, mUpY, mUpZ);
-    
+
     glutPostRedisplay();
 }
 
 
-const GLfloat light_ambient[]  = { 0.0f, 0.0f, 0.0f, 1.0f };
+const GLfloat light_ambient[]  = { 0.5f, 0.5f, 0.5f, 1.0f };
 const GLfloat light_diffuse[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
 const GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 const GLfloat light_position[] = { 2.0f, 5.0f, 5.0f, 0.0f };
@@ -432,58 +596,79 @@ const GLfloat high_shininess[] = { 100.0f };
 
 int main(int argc, char *argv[])
 {
-    int leftTop, rightTop, leftBottom, rightBottom;
-    
-    /*  cin >> leftTop;
-     cin >> rightTop;
-     cin >> leftBottom;
-     cin >> rightBottom;*/
-    
-    leftTop = -3;
+/*  cin >> leftTop;
+    cin >> rightTop;
+    cin >> leftBottom;
+    cin >> rightBottom;*/
+
+    for(int i=0; i<BUTTONNUMBER; i++){
+        BUTTONS[i][2] = BUTTONS[i][0] + BUTTONWIDTH;
+        BUTTONS[i][3] = BUTTONS[i][1] + BUTTONHEIGHT;
+    }
+
+    for(int i=0; i < MATRIX_LENGTH; i++){
+        for(int j=0; j < MATRIX_LENGTH; j++){
+            A[i][j] = 0;
+        }
+    }
+
+    /*
+    for(int i=0; i<BUTTONNUMBER; i++){
+        cout << "a" << BUTTONS[i][0] << "b" << BUTTONS[i][1] << "c" << BUTTONS[i][2] <<"d" << BUTTONS[i][3] << endl;
+    }
+     */
+
+    leftTop = -1;
     rightTop = 7;
     leftBottom = 1;
-    rightBottom = -5;
-    
+    rightBottom = -33;
+
     glutInit(&argc, argv);
-    glutInitWindowSize(800,600);
+    glutInitWindowSize(SCREENWIDTH,SCREENHEIGHT);
     glutInitWindowPosition(10,10);
-    
-    
+
+
     makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
-    printMatrix();
-    
+    //printMatrix();
+
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-    
+
     glutCreateWindow("Terrain");
-    
+
     glutReshapeFunc(resize);
     glutDisplayFunc(display);
     glutKeyboardFunc(key);
     glutSpecialFunc(Keyboard_Input);
     glutIdleFunc(idle);
     glutPassiveMotionFunc( mouse_Movement );
-    
-    glClearColor(0,0,1,1);
+    glutMouseFunc(mouseEvent);
+
+    //WorldSize
+    glOrtho(-1000.0, 1000.0, -1000.0, 1000.0, -1000.0, 1000.0);
+    glClearColor(0,0.5,0.8,1);
+
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    
+
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    
+
     glEnable(GL_LIGHT0);
     glEnable(GL_NORMALIZE);
     glEnable(GL_COLOR_MATERIAL);
     glEnable(GL_LIGHTING);
-    
+
     glLightfv(GL_LIGHT0, GL_AMBIENT,  light_ambient);
     glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_diffuse);
     glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-    
+
     glMaterialfv(GL_FRONT, GL_AMBIENT,   mat_ambient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE,   mat_diffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR,  mat_specular);
     glMaterialfv(GL_FRONT, GL_SHININESS, high_shininess);
-    
+
+    makeObj();
+
     glutMainLoop();
 }
