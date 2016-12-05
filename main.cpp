@@ -636,10 +636,10 @@ int main(int argc, char *argv[])
     }
      */
 
-    leftTop = -8;
-    rightTop = 25;
+    leftTop = -50;
+    rightTop = 7;
     leftBottom = 0;
-    rightBottom = -5;
+    rightBottom = -60;
 
     glutInit(&argc, argv);
     glutInitWindowSize(SCREENWIDTH,SCREENHEIGHT);
