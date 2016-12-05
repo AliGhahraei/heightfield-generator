@@ -18,7 +18,7 @@ using namespace std;
 #define SCREENHEIGHT 600
 #define BUTTONWIDTH 50
 #define BUTTONHEIGHT 50
-#define BUTTONNUMBER 12
+#define BUTTONNUMBER 13
 
 int leftTop, rightTop, leftBottom, rightBottom;
 
@@ -51,6 +51,8 @@ float BUTTONS [BUTTONNUMBER][4] = {
         // Size
         {5*SCREENWIDTH/8, SCREENHEIGHT - BUTTONHEIGHT},
         {(5*SCREENWIDTH/8) + BUTTONWIDTH + 5, SCREENHEIGHT - BUTTONHEIGHT},
+        // Make OBJ
+        {SCREENWIDTH/4, SCREENHEIGHT - BUTTONHEIGHT},
 };
 
 float A[10000][10000] = {0};
@@ -209,6 +211,7 @@ void drawButtons(){
     printText(BUTTONS[10][0] + 14, BUTTONS[10][1] - 40, "Size");
     printText(BUTTONS[10][0], BUTTONS[10][1], "-");
     printText(BUTTONS[11][0], BUTTONS[11][1], "+");
+    printText(BUTTONS[12][0] - 12, BUTTONS[12][1], "OBJ");
 
     glBegin(GL_QUADS);
     for(int i = 0; i < BUTTONNUMBER; i++){
@@ -603,6 +606,12 @@ void mouseEvent(int button, int state, int x, int y){
             makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
             glutPostRedisplay();
         }
+
+        else if(clicked(BUTTONS[12], x, y)){
+            cout << "OBJ button pressed" << endl;
+            makeObj();
+            glutPostRedisplay();
+        }
     }
 }
 
@@ -707,8 +716,6 @@ int main(int argc, char *argv[])
     glMaterialfv(GL_FRONT, GL_DIFFUSE,   mat_diffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR,  mat_specular);
     glMaterialfv(GL_FRONT, GL_SHININESS, high_shininess);
-
-    makeObj();
 
     glutMainLoop();
 }
