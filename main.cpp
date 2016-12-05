@@ -17,7 +17,9 @@ using namespace std;
 #define SCREENHEIGHT 600
 #define BUTTONWIDTH 50
 #define BUTTONHEIGHT 50
-#define BUTTONNUMBER 4
+#define BUTTONNUMBER 12
+
+int leftTop, rightTop, leftBottom, rightBottom;
 
 //Offset
 int O = 30;
@@ -25,17 +27,29 @@ int O = 30;
 int Ni = 1;
 
 //Size of the chart
-const int n = 5, MATRIX_LENGTH = pow(2,n) + 1;
+int n = 5, MATRIX_LENGTH = pow(2,n) + 1;
 
 //Buttons
 float BUTTONS [BUTTONNUMBER][4] = {
+        // WASD
         {0, SCREENHEIGHT - 2 * BUTTONHEIGHT},
         {2 * BUTTONWIDTH, SCREENHEIGHT - 2 * BUTTONHEIGHT},
         {BUTTONWIDTH, SCREENHEIGHT - BUTTONHEIGHT},
         {BUTTONWIDTH, SCREENHEIGHT - 3 * BUTTONHEIGHT},
+        // Arrows
+        {SCREENWIDTH - (3 * BUTTONWIDTH), SCREENHEIGHT - 2 * BUTTONHEIGHT},
+        {SCREENWIDTH - BUTTONWIDTH, SCREENHEIGHT - 2 * BUTTONHEIGHT},
+        {SCREENWIDTH - (2 * BUTTONWIDTH), SCREENHEIGHT - BUTTONHEIGHT},
+        {SCREENWIDTH - (2 * BUTTONWIDTH), SCREENHEIGHT - 3 * BUTTONHEIGHT},
+        // Roughness
+        {3*SCREENWIDTH/8, SCREENHEIGHT - BUTTONHEIGHT},
+        {3*SCREENWIDTH/8 + BUTTONWIDTH + 5, SCREENHEIGHT - BUTTONHEIGHT},
+        // Size
+        {5*SCREENWIDTH/8, SCREENHEIGHT - BUTTONHEIGHT},
+        {(5*SCREENWIDTH/8) + BUTTONWIDTH + 5, SCREENHEIGHT - BUTTONHEIGHT},
 };
 
-float A[MATRIX_LENGTH][MATRIX_LENGTH] = {0};
+float A[10000][10000] = {0};
 
 float mPosX = MATRIX_LENGTH, mPosY = 10, mPosZ = 0; // Position
 float mViewX = 0, mViewY = 0, mViewZ = 0; // Target to view
@@ -414,26 +428,84 @@ void mouseEvent(int button, int state, int x, int y){
 
     if(isLeftMouseButton && isReleased){
         if(clicked(BUTTONS[0], x, y)){
-            cout << "left" << endl;
+            cout << "a" << endl;
             DollyCamera(CAMSPEED2);
             glutPostRedisplay();
         }
 
         else if(clicked(BUTTONS[1], x, y)){
-            cout << "right" << endl;
+            cout << "d" << endl;
             DollyCamera(-CAMSPEED2);
             glutPostRedisplay();
         }
 
         else if(clicked(BUTTONS[2], x, y)){
-            cout << "up" << endl;
-            BoomCamera(CAMSPEED2);
+            cout << "s" << endl;
+            BoomCamera(-CAMSPEED2);
             glutPostRedisplay();
         }
 
         else if(clicked(BUTTONS[3], x, y)){
-            cout << "down" << endl;
-            BoomCamera(-CAMSPEED2);
+            cout << "w" << endl;
+            BoomCamera(CAMSPEED2);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[4], x, y)){
+            cout << "izq" << endl;
+            RotateView(-CAMSPEED);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[5], x, y)){
+            cout << "der" << endl;
+            RotateView(CAMSPEED);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[6], x, y)){
+            cout << "abajo" << endl;
+            MoveCamera(-CAMSPEED);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[7], x, y)){
+            cout << "arriba" << endl;
+            MoveCamera(CAMSPEED);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[8], x, y)){
+            cout << "roughnessDown" << endl;
+            if(O != 10){
+                O-=10;
+                makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
+                glutPostRedisplay();
+            }
+        }
+
+        else if(clicked(BUTTONS[9], x, y)){
+            cout << "roughnessUp" << endl;
+            O+=10;
+            makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
+            glutPostRedisplay();
+        }
+
+        else if(clicked(BUTTONS[10], x, y)){
+            cout << "SizeDown" << endl;
+            if(n != 1){
+                n-=1;
+                MATRIX_LENGTH = pow(2, n) + 1;
+                makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
+                glutPostRedisplay();
+            }
+        }
+
+        else if(clicked(BUTTONS[11], x, y)){
+            cout << "SizeUp" << endl;
+            n+=1;
+            MATRIX_LENGTH = pow(2, n) + 1;
+            makeMatrix(leftTop, rightTop, leftBottom, rightBottom);
             glutPostRedisplay();
         }
     }
@@ -468,8 +540,6 @@ const GLfloat high_shininess[] = { 100.0f };
 
 int main(int argc, char *argv[])
 {
-    int leftTop, rightTop, leftBottom, rightBottom;
-
 /*  cin >> leftTop;
     cin >> rightTop;
     cin >> leftBottom;
@@ -478,6 +548,12 @@ int main(int argc, char *argv[])
     for(int i=0; i<BUTTONNUMBER; i++){
         BUTTONS[i][2] = BUTTONS[i][0] + BUTTONWIDTH;
         BUTTONS[i][3] = BUTTONS[i][1] + BUTTONHEIGHT;
+    }
+
+    for(int i=0; i < MATRIX_LENGTH; i++){
+        for(int j=0; j < MATRIX_LENGTH; j++){
+            A[i][j] = 0;
+        }
     }
 
     /*
