@@ -93,8 +93,6 @@ void makeObj(){
 void makeMatrix(float leftTop, float rightTop, float leftBottom, float rightBottom)
 {
 
-    srand (time(NULL));
-
     int lastIndex = MATRIX_LENGTH - 1;
 
     // Corner initialization
@@ -175,11 +173,19 @@ void drawButton(float* button){
     glVertex2f(button[0], button[3]);
 }
 
+void printText(double x, double y, string text){
+    glRasterPos2i((int)x + 15, (int)y + 30);  // move in 10 pixels from the left and bottom edges
+    for ( int i = 0; i < text.length(); ++i ) {
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, text[i]);
+    }
+}
+
 void drawButtons(){
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
     glOrtho(0.0, SCREENWIDTH, SCREENHEIGHT, 0.0, -1.0, 10.0);
+
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
@@ -188,6 +194,19 @@ void drawButtons(){
     glClear(GL_DEPTH_BUFFER_BIT);
 
     glColor3f(0.5, 0.5, 0.5);
+
+    printText(BUTTONS[0][0], BUTTONS[0][1], "A");
+    printText(BUTTONS[1][0], BUTTONS[1][1], "D");
+    printText(BUTTONS[2][0], BUTTONS[2][1], "S");
+    printText(BUTTONS[3][0], BUTTONS[3][1], "W");
+    printText(BUTTONS[4][0], BUTTONS[4][1], "L");
+    printText(BUTTONS[5][0], BUTTONS[5][1], "R");
+    printText(BUTTONS[6][0], BUTTONS[6][1], "D");
+    printText(BUTTONS[7][0], BUTTONS[7][1], "U");
+    printText(BUTTONS[8][0], BUTTONS[8][1], "-");
+    printText(BUTTONS[9][0], BUTTONS[9][1], "+");
+    printText(BUTTONS[10][0], BUTTONS[10][1], "-");
+    printText(BUTTONS[11][0], BUTTONS[11][1], "+");
 
     glBegin(GL_QUADS);
     for(int i = 0; i < BUTTONNUMBER; i++){
@@ -614,6 +633,7 @@ const GLfloat high_shininess[] = { 100.0f };
 
 int main(int argc, char *argv[])
 {
+    srand (time(NULL));
 /*  cin >> leftTop;
     cin >> rightTop;
     cin >> leftBottom;
