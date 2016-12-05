@@ -203,8 +203,10 @@ void drawButtons(){
     printText(BUTTONS[5][0], BUTTONS[5][1], "R");
     printText(BUTTONS[6][0], BUTTONS[6][1], "D");
     printText(BUTTONS[7][0], BUTTONS[7][1], "U");
+    printText(BUTTONS[8][0], BUTTONS[8][1] - 40, "Roughness");
     printText(BUTTONS[8][0], BUTTONS[8][1], "-");
     printText(BUTTONS[9][0], BUTTONS[9][1], "+");
+    printText(BUTTONS[10][0], BUTTONS[10][1] - 40, "Size");
     printText(BUTTONS[10][0], BUTTONS[10][1], "-");
     printText(BUTTONS[11][0], BUTTONS[11][1], "+");
 
