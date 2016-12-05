@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <fstream>
 
 using namespace std;
 
@@ -25,6 +26,9 @@ int leftTop, rightTop, leftBottom, rightBottom;
 int O = 30;
 //Noise
 int Ni = 1;
+
+//RotationAngle
+float angle = 1.0;
 
 //Size of the chart
 int n = 5, MATRIX_LENGTH = pow(2,n) + 1;
@@ -62,6 +66,31 @@ bool move_x = false, move_y = false, move_z = false; // simple moves flags
 bool tilt = false, roll = false, pan = false; // transformations of camera
 bool freeMove = false; // free camera movement
 int iWidth, iHeight; // size of the window
+
+void makeObj(){
+    cout<<"IMPRIMIENDO OBJ"<<endl;
+    ofstream archivo;
+    archivo.open("terreno.obj");
+
+    //Vertices
+    int cantVertices = 0;
+    for(int iX = 0; iX < (MATRIX_LENGTH-1); iX++){
+        glBegin(GL_QUAD_STRIP);
+        for(int jY = 0; jY < (MATRIX_LENGTH-1); jY++){
+            cantVertices++;
+            archivo<<"v "<<iX+1<<" "<<A[iX+1][jY]<<" "<<jY<<endl;
+        }
+        glEnd();
+    }
+
+    //Faces
+    for(int xIt = 1; xIt <= cantVertices; xIt+=4)
+    {
+        archivo<<"f "<<" "<<xIt<<" "<<xIt+1<<" "<<xIt+2<<" "<<xIt+3<<endl;
+    }
+    archivo.close();
+    cout<<"TERMINA OBJ"<<endl;
+}
 
 void makeMatrix(float leftTop, float rightTop, float leftBottom, float rightBottom)
 {
@@ -132,7 +161,10 @@ static void resize(int width, int height)
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glFrustum(-ar, ar, -1.0, 1.0, 2.0, 100.0);
+    //glFrustum(-ar, ar, -1.0, 1.0, 2.0, 100.0);
+
+    //WorldSize
+    glOrtho(-50.0, 50.0, -50.0, 50.0, -150.0, 150.0);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity() ;
@@ -175,14 +207,37 @@ void drawButtons(){
 static void display(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glColor3f(0.0, 1.0, 0.0);
+    glEnable(GL_DEPTH_TEST);
 
     gluLookAt(mPosX, mPosY, mPosZ,
               mViewX, mViewY, mViewZ,
               mUpX, mUpY, mUpZ);
 
+    float colorflt = 1.0;
+
     glPushMatrix();
+
+    int odd = 0;
+
+    glTranslatef(40.0 ,0.0 ,40.0);
+    glRotatef(angle, 0.0f, 1.0f, 0.0f);
+    angle++;
+    for(int iX = 0; iX < (MATRIX_LENGTH-1); iX++){
+        glBegin(GL_QUAD_STRIP);
+        for(int jY = 0; jY < (MATRIX_LENGTH-1); jY++){
+            glColor3f(0.0, 0.0, 0.0);
+            glNormal3f(iX+1, A[iX+1][jY], jY);
+            glVertex3f(iX+1, A[iX+1][jY], jY);
+            glColor3f(107.0/255.0, 68.0/255.0, 35.0/255.0);
+            glNormal3f(iX, A[iX][jY], jY);
+            glVertex3f(iX, A[iX][jY], jY);
+        }
+        glEnd();
+    }
+
+    glPopMatrix();
+
+    /*
     glBegin(GL_TRIANGLES);
     for(int i = 0; i < MATRIX_LENGTH; i++)
     {
@@ -213,6 +268,7 @@ static void display(void)
     }
     glEnd();
     glPopMatrix();
+     */
 
     drawButtons();
 
@@ -407,10 +463,10 @@ static void key(unsigned char key, int x, int y)
             BoomCamera(-CAMSPEED2);
             break;
         case 'a':
-            DollyCamera(CAMSPEED2);
+            DollyCamera(-CAMSPEED2);
             break;
         case 'd':
-            DollyCamera(-CAMSPEED2);
+            DollyCamera(CAMSPEED2);
             break;
 
     }
@@ -526,7 +582,7 @@ static void idle(void)
 }
 
 
-const GLfloat light_ambient[]  = { 0.0f, 0.0f, 0.0f, 1.0f };
+const GLfloat light_ambient[]  = { 0.5f, 0.5f, 0.5f, 1.0f };
 const GLfloat light_diffuse[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
 const GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 const GLfloat light_position[] = { 2.0f, 5.0f, 5.0f, 0.0f };
@@ -562,10 +618,10 @@ int main(int argc, char *argv[])
     }
      */
 
-    leftTop = 7;
-    rightTop = 3;
-    leftBottom = 5;
-    rightBottom = 4;
+    leftTop = -1;
+    rightTop = 7;
+    leftBottom = 1;
+    rightBottom = -33;
 
     glutInit(&argc, argv);
     glutInitWindowSize(SCREENWIDTH,SCREENHEIGHT);
@@ -587,7 +643,10 @@ int main(int argc, char *argv[])
     glutPassiveMotionFunc( mouse_Movement );
     glutMouseFunc(mouseEvent);
 
-    glClearColor(1,1,1,1);
+    //WorldSize
+    glOrtho(-1000.0, 1000.0, -1000.0, 1000.0, -1000.0, 1000.0);
+    glClearColor(0,0.5,0.8,1);
+
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
@@ -608,6 +667,8 @@ int main(int argc, char *argv[])
     glMaterialfv(GL_FRONT, GL_DIFFUSE,   mat_diffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR,  mat_specular);
     glMaterialfv(GL_FRONT, GL_SHININESS, high_shininess);
+
+    makeObj();
 
     glutMainLoop();
 }
